@@ -18,6 +18,15 @@ jobs:
       CONTENT_REPO_URL: ${{ secrets.CONTENT_REPO_URL }}
       CONTENT_DIR: ${{ secrets.CONTENT_DIR }}
     steps:
+      # 添加调试步骤
+      - name: Debug SSH
+        run: |
+          echo "Testing SSH connection to Gitee"
+          mkdir -p ～/.ssh
+          echo "$GITEE_SSH_PRIVATE_KEY" > ～/.ssh/id_ed25519
+          chmod 600 ～/.ssh/id_ed25519
+          ssh -T -o StrictHostKeyChecking=no git@gitee.com
+          
       - uses: actions/checkout@v4
         with:
           ref: main
