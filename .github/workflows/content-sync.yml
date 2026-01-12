@@ -6,6 +6,9 @@ on:
     paths:
       - 'src/content/**'
       - 'public/images/**'
+    # ✅ 新增：定时触发（每小时运行一次）
+  schedule:
+    - cron: '0 * * * *'  # 每小时整点运行
 
 jobs:
   sync-content:
@@ -45,8 +48,8 @@ jobs:
 
       - name: Commit changes
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
+          git config user.name "NianGao5142"
+          git config user.email "3472217299@qq.com"
           git add .
           git commit -m "Sync content from content repo" || echo "No changes to commit"
           git push
