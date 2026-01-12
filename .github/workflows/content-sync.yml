@@ -14,7 +14,7 @@ jobs:
   sync-content:
     runs-on: ubuntu-latest
     env:
-      # 由于内容仓库是公开的，直接使用 HTTPS URL
+      # 由于内容仓库是公开的，直接使用 HTTPS URL:
       CONTENT_REPO_URL: https://gitee.com/niangao5142/mizuki-content.git
       CONTENT_DIR: ./src/content
     steps:
