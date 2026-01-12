@@ -6,43 +6,23 @@ on:
     paths:
       - 'src/content/**'
       - 'public/images/**'
-    # ✅ 新增：定时触发（每小时运行一次）
+  # 每小时运行一次，确保内容及时同步
   schedule:
-    - cron: '0 * * * *'  # 每小时整点运行
+    - cron: '0 * * * *'
 
 jobs:
   sync-content:
     runs-on: ubuntu-latest
     env:
-      ENABLE_CONTENT_SYNC: ${{ secrets.ENABLE_CONTENT_SYNC }}
-      CONTENT_REPO_URL: ${{ secrets.CONTENT_REPO_URL }}
-      CONTENT_DIR: ${{ secrets.CONTENT_DIR }}
+      # 由于内容仓库是公开的，直接使用 HTTPS URL
+      CONTENT_REPO_URL: https://gitee.com/niangao5142/mizuki-content.git
+      CONTENT_DIR: ./src/content
     steps:
-      # 添加调试步骤：
-      - name: Debug SSH
-        run: |
-          echo "Testing SSH connection to Gitee"
-          mkdir -p ～/.ssh
-          echo "$GITEE_SSH_PRIVATE_KEY" > ～/.ssh/id_ed25519
-          chmod 600 ～/.ssh/id_ed25519
-          ssh -T -o StrictHostKeyChecking=no git@gitee.com
-          
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: main
           persist-credentials: false
-
-      # 关键步骤：添加Gitee主机密钥
-      - name: Add Gitee host key
-        run: |
-          mkdir -p ～/.ssh
-          ssh-keyscan -H gitee.com >> ～/.ssh/known_hosts
-
-      # 关键步骤：配置Gitee SSH密钥
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.GITEE_SSH_PRIVATE_KEY }}
 
       - name: Set up Node
         uses: actions/setup-node@v3
@@ -60,5 +40,5 @@ jobs:
           git config user.name "NianGao5142"
           git config user.email "3472217299@qq.com"
           git add .
-          git commit -m "Sync content from content repo" || echo "No changes to commit"
+          git commit -m "Sync content from public content repo" || echo "No changes to commit"
           git push
