@@ -10,11 +10,27 @@ on:
 jobs:
   sync-content:
     runs-on: ubuntu-latest
+    env:
+      ENABLE_CONTENT_SYNC: ${{ secrets.ENABLE_CONTENT_SYNC }}
+      CONTENT_REPO_URL: ${{ secrets.CONTENT_REPO_URL }}
+      CONTENT_DIR: ${{ secrets.CONTENT_DIR }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           persist-credentials: false
+
+      # 关键步骤：添加Gitee主机密钥
+      - name: Add Gitee host key
+        run: |
+          mkdir -p ～/.ssh
+          ssh-keyscan -H gitee.com >> ～/.ssh/known_hosts
+
+      # 关键步骤：配置Gitee SSH密钥
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.GITEE_SSH_PRIVATE_KEY }}
 
       - name: Set up Node
         uses: actions/setup-node@v3
@@ -29,8 +45,8 @@ jobs:
 
       - name: Commit changes
         run: |
-          git config user.name "NianGao5132 GitHub Actions"
-          git config user.email "3472217299@qq.com"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
           git add .
           git commit -m "Sync content from content repo" || echo "No changes to commit"
           git push
