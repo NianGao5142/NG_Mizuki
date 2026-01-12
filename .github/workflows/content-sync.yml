@@ -18,7 +18,7 @@ jobs:
       CONTENT_REPO_URL: ${{ secrets.CONTENT_REPO_URL }}
       CONTENT_DIR: ${{ secrets.CONTENT_DIR }}
     steps:
-      # 添加调试步骤
+      # 添加调试步骤：
       - name: Debug SSH
         run: |
           echo "Testing SSH connection to Gitee"
