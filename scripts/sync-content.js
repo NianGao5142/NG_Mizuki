@@ -36,7 +36,9 @@ if (!fs.existsSync(CONTENT_DIR)) {
 	console.log("Using independent repository mode");
 
 	if (!CONTENT_REPO_URL) {
-		console.warn("Warning: CONTENT_REPO_URL not set, will use local content");
+		console.warn(
+			"Warning: CONTENT_REPO_URL not set, will use local content",
+		);
 		console.log(
 			"Tip: Please set CONTENT_REPO_URL environment variable or manually create content directory",
 		);
@@ -134,3 +136,7 @@ function copyRecursive(src, dest) {
 		fs.copyFileSync(src, dest);
 	}
 }
+
+// sync-content.js 末尾
+const giteeLatestSha = await getGiteeHeadSha();
+fs.writeFileSync(".content-version", giteeLatestSha + "\n");
