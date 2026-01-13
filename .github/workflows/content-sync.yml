@@ -9,7 +9,7 @@ jobs:
         runs-on: ubuntu-latest
         env:
             CONTENT_REPO_URL: https://gitee.com/niangao5142/mizuki-content.git
-            CONTENT_DIR: ./src/content
+            CONTENT_DIR: ./content
 
         permissions:
             contents: write
