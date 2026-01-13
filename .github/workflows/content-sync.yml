@@ -1,44 +1,50 @@
 name: Content Sync
 
+# 只响应来自 Gitee Webhook 的手动触发
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/content/**'
-      - 'public/images/**'
-  # 每小时运行一次，确保内容及时同步
-  schedule:
-    - cron: '0 * * * *'
+    repository_dispatch:
+        types: [trigger-sync-from-gitee]
 
 jobs:
-  sync-content:
-    runs-on: ubuntu-latest
-    env:
-      # 由于内容仓库是公开的，直接使用 HTTPS URL:
-      CONTENT_REPO_URL: https://gitee.com/niangao5142/mizuki-content.git
-      CONTENT_DIR: ./src/content
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          persist-credentials: false
+    sync-content:
+        runs-on: ubuntu-latest
+        env:
+            CONTENT_REPO_URL: https://gitee.com/niangao5142/mizuki-content.git
+            CONTENT_DIR: ./src/content
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  ref: main
+                  # 必须设置 persist-credentials: true 才能 git push
+                  persist-credentials: true
 
-      - name: Set up Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "pnpm"
 
-      - name: Install dependencies
-        run: pnpm install
+            - name: Install pnpm
+              run: npm install -g pnpm
 
-      - name: Sync content
-        run: pnpm run sync-content
+            - name: Install dependencies
+              run: pnpm install
 
-      - name: Commit changes
-        run: |
-          git config user.name "NianGao5142"
-          git config user.email "3472217299@qq.com"
-          git add .
-          git commit -m "Sync content from public content repo" || echo "No changes to commit"
-          git push
+            - name: Sync content
+              run: pnpm run sync-content
+
+            - name: Commit and push changes (if any)
+              run: |
+                  git config user.name "NianGao5142"
+                  git config user.email "3472217299@qq.com"
+
+                  # 检查是否有变更
+                  if ! git diff --quiet || ! git diff --cached --quiet; then
+                    git add .
+                    git commit -m "Sync content from public content repo [triggered by Gitee]"
+                    git push
+                    echo "✅ Changes committed and pushed."
+                  else
+                    echo "ℹ️ No changes detected. Nothing to commit."
+                  fi
