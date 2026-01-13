@@ -1,6 +1,5 @@
 name: Content Sync
 
-# 只响应来自 Gitee Webhook 的手动触发
 on:
     repository_dispatch:
         types: [trigger-sync-from-gitee]
@@ -11,12 +10,16 @@ jobs:
         env:
             CONTENT_REPO_URL: https://gitee.com/niangao5142/mizuki-content.git
             CONTENT_DIR: ./src/content
+
+        # 添加权限
+        permissions:
+            contents: write
+
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
+              # 移除 repository 参数，默认就是当前仓库
               with:
-                  ref: main
-                  # 必须设置 persist-credentials: true 才能 git push
                   persist-credentials: true
 
             - name: Set up Node.js
@@ -34,17 +37,17 @@ jobs:
             - name: Sync content
               run: pnpm run sync-content
 
-            - name: Commit and push changes (if any)
+            - name: Commit and push changes
               run: |
-                  git config user.name "NianGao5142"
-                  git config user.email "3472217299@qq.com"
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
 
-                  # 检查是否有变更
-                  if ! git diff --quiet || ! git diff --cached --quiet; then
-                    git add .
-                    git commit -m "Sync content from public content repo [triggered by Gitee]"
+                  # 检查变更
+                  git add .
+                  if ! git diff --cached --quiet; then
+                    git commit -m "Sync content from Gitee [$(date +'%Y-%m-%d %H:%M:%S')]"
                     git push
-                    echo "✅ Changes committed and pushed."
+                    echo "✅ Changes pushed"
                   else
-                    echo "ℹ️ No changes detected. Nothing to commit."
+                    echo "ℹ️ No changes to commit"
                   fi
