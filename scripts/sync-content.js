@@ -138,5 +138,35 @@ function copyRecursive(src, dest) {
 }
 
 // sync-content.js 末尾
-const giteeLatestSha = await getGiteeHeadSha();
-fs.writeFileSync(".content-version", giteeLatestSha + "\n");
+// const giteeLatestSha = await getGiteeHeadSha();
+// fs.writeFileSync(".content-version", giteeLatestSha + "\n");
+// 获取 Gitee 仓库默认分支的最新 commit SHA
+async function getGiteeHeadSha() {
+	const repoUrl = process.env.CONTENT_REPO_URL; // e.g., https://gitee.com/niangao5142/mizuki-content.git
+	const match = repoUrl.match(/https:\/\/gitee\.com\/([^/]+)\/([^/.]+)/);
+	if (!match) {
+		throw new Error("Invalid Gitee repository URL");
+	}
+	const [, owner, repo] = match;
+
+	const apiUrl = `https://gitee.com/api/v5/repos/${owner}/${repo}/branches`;
+	const response = await fetch(apiUrl);
+	if (!response.ok) {
+		throw new Error(
+			`Failed to fetch branches from Gitee: ${response.status}`,
+		);
+	}
+	const branches = await response.json();
+	const defaultBranch =
+		branches.find((b) => b.name === "master") || branches[0];
+	return defaultBranch.commit.sha;
+}
+
+// 在 sync-content.js 末尾
+try {
+	const giteeLatestSha = await getGiteeHeadSha();
+	fs.writeFileSync(".content-version", giteeLatestSha + "\n", "utf8");
+	console.log("✅ Wrote content version:", giteeLatestSha);
+} catch (err) {
+	console.warn("⚠️ Failed to write content version:", err.message);
+}
