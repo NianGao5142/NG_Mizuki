@@ -9,7 +9,7 @@ jobs:
         runs-on: ubuntu-latest
         env:
             CONTENT_REPO_URL: https://gitee.com/niangao5142/mizuki-content.git
-            CONTENT_DIR: ./src/content
+            CONTENT_DIR: ./content
 
         permissions:
             contents: write
@@ -20,7 +20,6 @@ jobs:
               with:
                   persist-credentials: true
 
-            # 先安装 pnpm，然后再设置 Node.js 缓存
             - name: Install pnpm
               run: npm install -g pnpm
 
@@ -28,7 +27,7 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: "20"
-                  cache: "pnpm" # 现在 pnpm 已经安装，可以正确缓存了
+                  cache: "pnpm"
 
             - name: Install dependencies
               run: pnpm install
@@ -37,6 +36,7 @@ jobs:
               run: pnpm run sync-content
 
             - name: Commit and push changes
+              id: commit
               run: |
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -45,8 +45,22 @@ jobs:
                   if ! git diff --cached --quiet; then
                     git commit -m "Sync content from Gitee [$(date +'%Y-%m-%d %H:%M:%S')]"
                     git push
+                    echo "changes_pushed=true" >> $GITHUB_OUTPUT
                     echo "✅ Changes pushed"
                   else
+                    echo "changes_pushed=false" >> $GITHUB_OUTPUT
                     echo "ℹ️ No changes to commit"
                   fi
 
+            # 👇 新增：仅当有内容更新并推送后，才触发构建
+            - name: Trigger CI Build (if changes pushed)
+              if: steps.commit.outputs.changes_pushed == 'true'
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      await github.rest.actions.createWorkflowDispatch({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        workflow_id: 'CI.yml',
+                        ref: 'master'  // 确保与你的默认分支一致
+                      });
