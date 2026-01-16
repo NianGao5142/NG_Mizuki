@@ -19,7 +19,8 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
               with:
-                  persist-credentials: true
+                  submodules: true # ✅ 关键：递归初始化 Submodule
+                  token: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Install pnpm
               run: npm install -g pnpm
