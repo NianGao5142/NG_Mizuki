@@ -12,7 +12,6 @@ draft: false
 date: 2025-01-20
 image: "./cover.png"
 pubDate: 2025-01-20
-permalink: "encrypted-example"
 ---
 
 这是一篇测试文章
