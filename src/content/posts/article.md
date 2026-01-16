@@ -1,5 +1,5 @@
 ---
-title: test article
+title: article
 published: 2025-01-20
 pinned: true
 description: A simple example of a Markdown blog post.
@@ -15,4 +15,4 @@ pubDate: 2025-01-20
 permalink: "encrypted-example"
 ---
 
-这是测试文章
+这是一篇测试文章

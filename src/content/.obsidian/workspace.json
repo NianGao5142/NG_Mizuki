@@ -11,14 +11,10 @@
             "id": "7e0317a5836ad44b",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "posts/markdown-tutorial.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "markdown-tutorial"
+              "title": "新标签页"
             }
           }
         ]
