@@ -15,9 +15,6 @@ jobs:
             CONTENT_REPO_URL: https://gitee.com/niangao5142/mizuki-content.git
             CONTENT_DIR: ./content
 
-        permissions:
-            contents: write
-
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
