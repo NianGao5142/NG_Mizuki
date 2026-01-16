@@ -61,6 +61,7 @@ jobs:
                       await github.rest.actions.createWorkflowDispatch({
                         owner: context.repo.owner,
                         repo: context.repo.repo,
-                        workflow_id: 'CI.yml',
+                        workflow_id: 'CI',
                         ref: 'master'  // 确保与你的默认分支一致
                       });
+
