@@ -4,6 +4,10 @@ on:
     repository_dispatch:
         types: [trigger-sync-from-gitee]
 
+permissions:
+    contents: write
+    actions: write # ✅ 关键修复：添加 actions: write
+
 jobs:
     sync-content:
         runs-on: ubuntu-latest
