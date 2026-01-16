@@ -28,27 +28,29 @@ jobs:
                   node-version: "20"
                   cache: "pnpm"
 
-            - name: Install pnpm
-              run: npm install -g pnpm
+            - name: Setup pnpm # ✅ 关键修复：使用官方 Action 安装 pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 8
 
             - name: Install dependencies
               run: pnpm install
 
             # ✅ 方法 1：直接更新 Submodule（推荐）
-            - name: Update submodule from Gitee
-              run: |
-                  cd ${{ env.CONTENT_DIR }}
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
-                  git fetch origin main  # 假设 Gitee 默认分支是 main
-                  git reset --hard origin/main  # 强制同步到最新
+            # - name: Update submodule from Gitee
+            #   run: |
+            #       cd ${{ env.CONTENT_DIR }}
+            #       git config user.name "github-actions[bot]"
+            #       git config user.email "github-actions[bot]@users.noreply.github.com"
+            #       git fetch origin main  # 假设 Gitee 默认分支是 main
+            #       git reset --hard origin/main  # 强制同步到最新
 
             # ✅ 方法 2：或使用 Mizuki 的 sync-content 脚本（需确保脚本支持 Submodule）
-            # - name: Run Mizuki sync script
-            #   run: pnpm run sync-content
-            #   env:
-            #     CONTENT_REPO_URL: ${{ env.CONTENT_REPO_URL }}
-            #     USE_SUBMODULE: true  # 必须启用 Submodule 模式
+            - name: Run Mizuki sync script
+              run: pnpm run sync-content
+              env:
+                  CONTENT_REPO_URL: ${{ env.CONTENT_REPO_URL }}
+                  USE_SUBMODULE: true # 必须启用 Submodule 模式
 
             - name: Commit submodule update
               id: commit
