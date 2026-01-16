@@ -6,55 +6,67 @@ on:
 
 permissions:
     contents: write
-    actions: write # ✅ 关键修复：添加 actions: write
+    actions: write
 
 jobs:
     sync-content:
         runs-on: ubuntu-latest
         env:
             CONTENT_REPO_URL: https://gitee.com/niangao5142/mizuki-content.git
-            CONTENT_DIR: ./content
+            CONTENT_DIR: ./content # Submodule 路径（与 .gitmodules 一致）
 
         steps:
-            - name: Checkout code
+            - name: Checkout code (with submodules)
               uses: actions/checkout@v4
               with:
                   submodules: true # ✅ 关键：递归初始化 Submodule
                   token: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Install pnpm
-              run: npm install -g pnpm
-
-            - name: Set up Node.js
+            - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: "20"
                   cache: "pnpm"
 
+            - name: Install pnpm
+              run: npm install -g pnpm
+
             - name: Install dependencies
               run: pnpm install
 
-            - name: Sync content
-              run: pnpm run sync-content
+            # ✅ 方法 1：直接更新 Submodule（推荐）
+            - name: Update submodule from Gitee
+              run: |
+                  cd ${{ env.CONTENT_DIR }}
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git fetch origin main  # 假设 Gitee 默认分支是 main
+                  git reset --hard origin/main  # 强制同步到最新
 
-            - name: Commit and push changes
+            # ✅ 方法 2：或使用 Mizuki 的 sync-content 脚本（需确保脚本支持 Submodule）
+            # - name: Run Mizuki sync script
+            #   run: pnpm run sync-content
+            #   env:
+            #     CONTENT_REPO_URL: ${{ env.CONTENT_REPO_URL }}
+            #     USE_SUBMODULE: true  # 必须启用 Submodule 模式
+
+            - name: Commit submodule update
               id: commit
               run: |
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
 
-                  git add .
-                  if ! git diff --cached --quiet; then
+                  # 检查 Submodule 是否有更新
+                  if ! git diff --quiet HEAD; then
+                    git add .
                     git commit -m "Sync content from Gitee [$(date +'%Y-%m-%d %H:%M:%S')]"
                     git push
                     echo "changes_pushed=true" >> $GITHUB_OUTPUT
-                    echo "✅ Changes pushed"
                   else
                     echo "changes_pushed=false" >> $GITHUB_OUTPUT
                     echo "ℹ️ No changes to commit"
                   fi
 
-            # 👇 新增：仅当有内容更新并推送后，才触发构建
             - name: Trigger CI Build (if changes pushed)
               if: steps.commit.outputs.changes_pushed == 'true'
               uses: actions/github-script@v7
@@ -64,6 +76,6 @@ jobs:
                         owner: context.repo.owner,
                         repo: context.repo.repo,
                         workflow_id: 'CI.yml',
-                        ref: 'master'  // 确保与你的默认分支一致
-                      });
+                        ref: 'master'
+                      })
 
