@@ -20,7 +20,7 @@ jobs:
               uses: actions/checkout@v4
               with:
                   submodules: true # ✅ 关键：递归初始化 Submodule
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ secrets.GITHUBS_TOKEN }}
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
