@@ -15,7 +15,6 @@ export type AnimeItem = {
 	startDate: string;
 	endDate: string;
 };
-
 const localAnimeList: AnimeItem[] = [
 	{
 		title: "Lycoris Recoil",

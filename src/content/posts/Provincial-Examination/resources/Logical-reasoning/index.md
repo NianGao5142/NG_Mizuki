@@ -3,7 +3,7 @@ title: 逻辑推理
 published: 2025-01-19
 pinned: false
 description: 公考笔记
-tags:[Markdown, note]
+tags: [Markdown, note]
 category: 公考
 author: niangao5142
 draft: false
