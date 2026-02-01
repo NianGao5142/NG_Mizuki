@@ -1,84 +1,83 @@
-# name: Content Sync
+name: Content Sync
 
-# on:
-#     repository_dispatch:
-#         types: [trigger-sync-from-gitee]
+on:
+    repository_dispatch:
+        types: [trigger-sync-from-gitee]
 
-# permissions:
-#     contents: write
-#     actions: write
+permissions:
+    contents: write
+    actions: write
 
-# jobs:
-#     sync-content:
-#         runs-on: ubuntu-latest
-#         env:
-#             CONTENT_REPO_URL: https://gitee.com/niangao5142/mizuki-content.git
-#             CONTENT_DIR: ./content # Submodule 路径（与 .gitmodules 一致）
+jobs:
+    sync-content:
+        runs-on: ubuntu-latest
+        env:
+            CONTENT_REPO_URL: https://gitee.com/niangao5142/mizuki-content.git
+            CONTENT_DIR: ./content # Submodule 路径（与 .gitmodules 一致）
 
-#         steps:
-#             - name: Checkout code (with submodules)
-#               uses: actions/checkout@v4
-#               with:
-#                   submodules: true
-#                   token: ${{ secrets.GITHUBS_TOKEN }}
+        steps:
+            - name: Checkout code (with submodules)
+              uses: actions/checkout@v4
+              with:
+                  submodules: true
+                  token: ${{ secrets.GITHUBS_TOKEN }}
 
-#             - name: Setup Node.js
-#               uses: actions/setup-node@v4
-#               with:
-#                   node-version: "20"
-#                   cache: "pnpm"
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "pnpm"
 
-#             - name: Setup pnpm # ✅ 关键修复：使用官方 Action 安装 pnpm
-#               uses: pnpm/action-setup@v4
-#               with:
-#                   version: 8
+            - name: Setup pnpm # ✅ 关键修复：使用官方 Action 安装 pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 8
 
-#             - name: Install dependencies
-#               run: pnpm install
+            - name: Install dependencies
+              run: pnpm install
 
-#             # ✅ 方法 1：直接更新 Submodule（推荐）
-#             # - name: Update submodule from Gitee
-#             #   run: |
-#             #       cd ${{ env.CONTENT_DIR }}
-#             #       git config user.name "github-actions[bot]"
-#             #       git config user.email "github-actions[bot]@users.noreply.github.com"
-#             #       git fetch origin main  # 假设 Gitee 默认分支是 main
-#             #       git reset --hard origin/main  # 强制同步到最新
+            # ✅ 方法 1：直接更新 Submodule（推荐）
+            # - name: Update submodule from Gitee
+            #   run: |
+            #       cd ${{ env.CONTENT_DIR }}
+            #       git config user.name "github-actions[bot]"
+            #       git config user.email "github-actions[bot]@users.noreply.github.com"
+            #       git fetch origin main  # 假设 Gitee 默认分支是 main
+            #       git reset --hard origin/main  # 强制同步到最新
 
-#             # ✅ 方法 2：或使用 Mizuki 的 sync-content 脚本（需确保脚本支持 Submodule）
-#             - name: Run Mizuki sync script
-#               run: pnpm run sync-content
-#               env:
-#                   CONTENT_REPO_URL: ${{ env.CONTENT_REPO_URL }}
-#                   USE_SUBMODULE: true # 必须启用 Submodule 模式
+            # ✅ 方法 2：或使用 Mizuki 的 sync-content 脚本（需确保脚本支持 Submodule）
+            - name: Run Mizuki sync script
+              run: pnpm run sync-content
+              env:
+                  CONTENT_REPO_URL: ${{ env.CONTENT_REPO_URL }}
+                  USE_SUBMODULE: true # 必须启用 Submodule 模式
 
-#             - name: Commit submodule update
-#               id: commit
-#               run: |
-#                   git config user.name "github-actions[bot]"
-#                   git config user.email "github-actions[bot]@users.noreply.github.com"
+            - name: Commit submodule update
+              id: commit
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
 
-#                   # 检查 Submodule 是否有更新
-#                   if ! git diff --quiet HEAD; then
-#                     git add .
-#                     git commit -m "Sync content from Gitee [$(date +'%Y-%m-%d %H:%M:%S')]"
-#                     git push
-#                     echo "changes_pushed=true" >> $GITHUB_OUTPUT
-#                   else
-#                     echo "changes_pushed=false" >> $GITHUB_OUTPUT
-#                     echo "ℹ️ No changes to commit"
-#                   fi
+                  # 检查 Submodule 是否有更新
+                  if ! git diff --quiet HEAD; then
+                    git add .
+                    git commit -m "Sync content from Gitee [$(date +'%Y-%m-%d %H:%M:%S')]"
+                    git push
+                    echo "changes_pushed=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "changes_pushed=false" >> $GITHUB_OUTPUT
+                    echo "ℹ️ No changes to commit"
+                  fi
 
-#             - name: Trigger CI Build (if changes pushed)
-#               if: steps.commit.outputs.changes_pushed == 'true'
-#               uses: actions/github-script@v7
-#               with:
-#                   script: |
-#                       await github.rest.actions.createWorkflowDispatch({
-#                         owner: context.repo.owner,
-#                         repo: context.repo.repo,
-#                         workflow_id: 'CI.yml',
-#                         ref: 'master'
-#                       })
-
+            - name: Trigger CI Build (if changes pushed)
+              if: steps.commit.outputs.changes_pushed == 'true'
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      await github.rest.actions.createWorkflowDispatch({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        workflow_id: 'CI.yml',
+                        ref: 'master'
+                      })
 
