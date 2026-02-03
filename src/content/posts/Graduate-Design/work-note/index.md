@@ -1,6 +1,6 @@
 ---
 title: 毕设工作
-published: 2025-01-20
+published: 2025-02-03
 pinned: false
 description: 毕设相关工作
 tags:
