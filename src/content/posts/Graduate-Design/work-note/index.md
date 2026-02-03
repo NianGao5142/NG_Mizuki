@@ -1,6 +1,6 @@
 ---
 title: 毕设工作
-published: 2025-02-03
+published: 2026-02-03
 pinned: false
 description: 毕设相关工作
 tags:
@@ -12,8 +12,8 @@ category: note
 licenseName: Unlicensed
 author: niangao5142
 draft: false
-date: 2025-02-03
-pubDate: 2025-02-03
+date: 2026-02-03
+pubDate: 2026-02-03
 ---
 
 1. 在注册报名管理的里面的比赛项目模块里

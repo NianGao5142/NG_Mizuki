@@ -1,6 +1,6 @@
 ---
 title: 毕设相关SQL笔记
-published: 2025-02-03
+published: 2026-02-03
 pinned: false
 description: 毕设SQL
 tags:
@@ -11,8 +11,8 @@ tags:
 category: file-note
 author: niangao5142
 draft: false
-date: 2025-02-03
-pubDate: 2025-02-03
+date: 2026-02-03
+pubDate: 2026-02-03
 ---
 ## 窗口函数
 ### row_number()

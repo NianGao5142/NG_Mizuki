@@ -1,17 +1,19 @@
 ---
 title: hello
-published: 2025-01-13
+published: 2026-01-13
 pinned: true
 description: A simple example of a Markdown blog post.
-tags: [Markdown, Blogging]
+tags:
+  - Markdown
+  - Blogging
 category: Examples
-licenseName: "Unlicensed"
+licenseName: Unlicensed
 author: emn178
-sourceLink: "https://github.com/emn178/markdown"
+sourceLink: https://github.com/emn178/markdown
 draft: false
-date: 2025-01-13
-pubDate: 2025-01-20
-permalink: "encrypted-example"
+date: 2026-01-13
+pubDate: 2026-01-20
+permalink: encrypted-example
 ---
 # 正文
 
