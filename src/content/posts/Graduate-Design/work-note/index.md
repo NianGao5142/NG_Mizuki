@@ -409,6 +409,7 @@ delete from match_score where match_id = "f44764f7-5cca-410d-b3b4-b7f59f9da3b1";
 
 ****
 # 260129
+## 要求
 **完成一下GenerateTeamMatchPromotePlayers这个方法(PullPromotion.java)**（生成晋级队伍）
 **再实现对应的获取这个数据的端口**
 
@@ -445,7 +446,7 @@ from (
 where rn = 1
 order by master_match_schedule_id;
 ```
-#### 相关的表
+## 相关的表
 ```bash
 (MySQL):badminton_matches_scoring>desc team_event_matches;
 +--------------------------+--------------+------+-----+-------------------+-----------------------------------------------+
@@ -475,7 +476,7 @@ mysql@110.40.192.228
   - 这两种记录由team_event_matches tm表记录
     - tm.master_match_schedule_id 是记录第一种的match_id的，tm.match_schedule_id是记录团体比赛内具体的各项比赛的
   - 查找比赛的时候利用team_event_code来查询第一种的match_schedule记录，也可以利用team_event_matches查询出第二种的match_schedule
-### **本次实现记录**
+## **本次实现记录**
 
 - 260203 2023年羽毛球赛竞赛规则 p101
-- 260204 一个组织不只对应一个队伍，用teamcode做限制
+- 260204 一个组织不只对应一个队伍，用teamcode做限制，修改以上sql
