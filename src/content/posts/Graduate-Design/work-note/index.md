@@ -15,7 +15,7 @@ draft: false
 date: 2026-02-03
 pubDate: 2026-02-03
 ---
-
+# ？
 1. 在注册报名管理的里面的比赛项目模块里
     - 创建项目之后
         - 编排管理系统里面应该也要有对应的一个项目被创建
@@ -25,7 +25,7 @@ pubDate: 2026-02-03
     - 不要直接数据库导入，从前端录入，手动和excl表都测一下，有问题修正一下。
 
 ----
-
+# ？
 测试过程
 
 - org001
@@ -68,7 +68,7 @@ pubDate: 2026-02-03
 - org003
 
 ----
-
+# ？
 ```json
 {
     "type": "地区联赛",
@@ -369,7 +369,7 @@ matchesGeneralVOList: [
 
 
 ****
-
+# ？
 ## ScoreTimerClient
 *计分页面不能够适应各种屏幕大小，改一下*
 
@@ -383,7 +383,7 @@ delete from match_score where match_id = "f44764f7-5cca-410d-b3b4-b7f59f9da3b1";
 
 
 ****
-
+# ？
 - 执裁裁判页面实现一下分页功能。
   - **全部比赛** and **选择比赛** 都要实现分页功能
 
@@ -394,7 +394,7 @@ delete from match_score where match_id = "f44764f7-5cca-410d-b3b4-b7f59f9da3b1";
   - 下载模板没有下载，修正一下.
 
 ****
-
+# ？
 - 实现一下，arrangeTeamPlayersWithGroupByPlayersWithGroupDTO，用team_match_signups代替participants
   - 它和单打的那个分组逻辑一样arrangePlayersWithGroupByPlayersWithGroupDTO)
   - 可以查一下，羽毛球分组的方法
@@ -408,7 +408,7 @@ delete from match_score where match_id = "f44764f7-5cca-410d-b3b4-b7f59f9da3b1";
 - team_match_signups这个表里面已经有几个数据了，你可以加几个测试用，最后把测试的删掉就可以了。
 
 ****
-
+# 260129
 **完成一下GenerateTeamMatchPromotePlayers这个方法(PullPromotion.java)**（生成晋级队伍）
 **再实现对应的获取这个数据的端口**
 
@@ -477,4 +477,5 @@ mysql@110.40.192.228
   - 查找比赛的时候利用team_event_code来查询第一种的match_schedule记录，也可以利用team_event_matches查询出第二种的match_schedule
 ### **本次实现记录**
 
-2023年羽毛球赛竞赛规则 p101
+- 260203 2023年羽毛球赛竞赛规则 p101
+- 260204 一个组织不只对应一个队伍，用teamcode做限制
