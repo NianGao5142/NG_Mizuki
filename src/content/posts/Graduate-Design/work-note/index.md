@@ -476,7 +476,54 @@ mysql@110.40.192.228
   - 这两种记录由team_event_matches tm表记录
     - tm.master_match_schedule_id 是记录第一种的match_id的，tm.match_schedule_id是记录团体比赛内具体的各项比赛的
   - 查找比赛的时候利用team_event_code来查询第一种的match_schedule记录，也可以利用team_event_matches查询出第二种的match_schedule
+## 修改
+修改后的sql
+```sql
+select
+    master_match_schedule_id,
+    organization_id,
+    team_match_signups_id,
+    win_count
+from (
+    select
+        tm.master_match_schedule_id,
+        tm.team_match_signups_id,
+        p.organization_id,
+        count(*) as win_count,
+        row_number() over (
+        	partition by tm.master_match_schedule_id
+        	order by count(*) desc
+        ) as rn
+    from team_event_matches tm
+    join team_match_signups tms on tms.team_match_signups_id = tm.team_match_signups_id
+    join match_schedule ms on ms.match_schedule_id = tm.match_schedule_id
+    join matches m on ms.match_id = m.match_id
+    join teams t on t.team_id = m.winner_id
+    join participants p on p.participant_id = t.participant_one_id
+    where ms.division_id = 'div-03fd4f8e805edecc356a4b6c06cbb285'
+    and ms.tournament_id = '257de693732eb1bdb4ab69aaada3a6e2'
+    and tm.team_event_code = 'TEAM-CC24129B'
+    group by
+    tm.master_match_schedule_id,
+    tm.team_match_signups_id, 
+    p.organization_id
+) t
+where rn = 1
+order by master_match_schedule_id;
+```
+- 在match_schedule表里面关于`团体比赛`
+  - 有两种记录一种是side_one_player_one_id ,side_two_player_one_id都是记录==team_match_signups_id==
+    - 是用来查看组织之间的比赛安排情况的 
+  - 另一种是正常的记录比赛的和单项一样，matches_schedule表中的team_event_code表示该记录属于团体赛
+  - 这两种记录由team_event_matches tm表记录
+    - tm.master_match_schedule_id 是记录第一种的match_id的，tm.match_schedule_id是记录团体比赛内具体的各项比赛的
+	  - 查找比赛的时候利用team_event_code来查询第一种的match_schedule记录，也可以利用team_event_matches查询出第二种的match_schedule
 ## **本次实现记录**
-
+思路：晋级队伍 -> 各队伍胜场次
 - 260203 2023年羽毛球赛竞赛规则 p101
 - 260204 一个组织不只对应一个队伍，用teamcode做限制，修改以上sql
+- 260206 对数据库进行修改，解决一个组织不只对应一个队伍的问题
+	- 修改team_event_matches表，添加team_match_signups_id字段，作为外键链接team_match_signups表
+	- 修改team_match_signups表，将主键team_match_signups_id字段类型由bigint改为varchar
+	- 修改matches_schedule表的side_one_player_one_id、side_one_player_two_id字段内容，将第一种情况改成记为team_match_signups_id
+	- 修改team表，添加team_match_signups_id与organization_id字段，分别与team_match_signups、organization表关联
