@@ -512,8 +512,9 @@ where rn = 1
 order by master_match_schedule_id;
 ```
 - 在match_schedule表里面关于`团体比赛`
-  - 有两种记录一种是side_one_player_one_id ,side_two_player_one_id都是记录==team_match_signups_id==
-    - 是用来查看组织之间的比赛安排情况的 
+  - 有两种记录一种是side_one_player_one_id ,side_
+  - two_player_one_id都是记录==team_match_signups_id==
+    - 是用来查看==组织之下的队伍==之间的比赛安排情况的 
   - 另一种是正常的记录比赛的和单项一样，matches_schedule表中的team_event_code表示该记录属于团体赛
   - 这两种记录由team_event_matches tm表记录
     - tm.master_match_schedule_id 是记录第一种的match_id的，tm.match_schedule_id是记录团体比赛内具体的各项比赛的
@@ -527,3 +528,106 @@ order by master_match_schedule_id;
 	- 修改team_match_signups表，将主键team_match_signups_id字段类型由bigint改为varchar
 	- 修改matches_schedule表的side_one_player_one_id、side_one_player_two_id字段内容，将第一种情况改成记为team_match_signups_id
 	- 修改team表，添加team_match_signups_id与organization_id字段，分别与team_match_signups、organization表关联
+- 260210 team_event_matches中的organization_id和team_match_signups_id是不是没用？
+	- 删除team_event_matches中的organization_id和team_match_signups_id？？
+
+## 草稿
+```sql
+select
+    master_match_schedule_id,
+    organization_id,
+    team_match_signups_id,
+    win_count
+from (
+    select
+        tm.master_match_schedule_id,
+        tm.team_match_signups_id,
+        p.organization_id,
+        count(*) as win_count,
+        row_number() over (
+        	partition by tm.master_match_schedule_id
+        	order by count(*) desc
+        ) as rn
+    from team_event_matches tm
+    join team_match_signups tms on tms.team_match_signups_id = tm.team_match_signups_id
+    join match_schedule ms on ms.match_schedule_id = tm.match_schedule_id
+    join matches m on ms.match_id = m.match_id
+    join teams t on t.team_id = m.winner_id
+    join participants p on p.participant_id = t.participant_one_id
+    where ms.division_id = 'div-03fd4f8e805edecc356a4b6c06cbb285'
+    and ms.tournament_id = '257de693732eb1bdb4ab69aaada3a6e2'
+    and tm.team_event_code = 'TEAM-CC24129B'
+    group by
+    tm.master_match_schedule_id,
+    tm.team_match_signups_id, 
+    p.organization_id
+) t
+where rn = 1
+order by master_match_schedule_id;
+
+
+
+-- 查找team_even_matches中记录多少个不同的master_match_schedule_id
+SELECT DISTINCT team_match_signups_id,master_match_schedule_id FROM team_event_matches
+
+-- 查询小组赛中各选手获胜场次
+SELECT m.winner_id AS player_id,
+               COUNT(*)    AS win_count
+        FROM match_schedule r
+                 JOIN matches m ON r.match_id = m.match_id
+        WHERE r.tournament_id = "257de693732eb1bdb4ab69aaada3a6e2"
+          AND r.division_id = "div-03fd4f8e805edecc356a4b6c06cbb285"
+          AND r.event_type = "mens_singles"
+          AND r.group_number = 1
+          AND m.winner_id IS NOT NULL
+        GROUP BY m.winner_id
+        
+
+-- 第一种情况：找出match_schedule中表示两个队伍的记录
+SELECT 
+  tem.master_match_schedule_id,
+  ms.side_one_player_one_id,
+  ms.side_two_player_one_id,
+  ms.division_id,
+  ms.event_type,
+  ms.team_event_code,
+  ms.match_id,
+  ms.group_number
+FROM
+  team_event_matches tem
+  JOIN match_schedule ms ON tem.master_match_schedule_id = ms.match_schedule_id
+-- 第二种情况：找出match_schedule中表示每个队伍内部的比赛
+SELECT
+  tem.team_match_signups_id,
+  ms.match_id,
+  m.winner_id AS win_team_id,
+  t.team_match_signups_id AS win_team_match_signups_id
+FROM
+  team_event_matches tem
+  JOIN match_schedule ms ON tem.match_schedule_id = ms.match_schedule_id
+  JOIN matches m ON ms.match_id = m.match_id
+  JOIN teams t ON m.winner_id = t.team_id
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+****
+# 20260210
+- 执裁裁判的设置加一个查看所有的未设置裁判的比赛,在选择比赛的弹窗里面加一个选项，后端代码也修改一下。
