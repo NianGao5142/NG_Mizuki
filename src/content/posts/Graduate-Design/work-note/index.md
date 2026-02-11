@@ -528,8 +528,9 @@ order by master_match_schedule_id;
 	- 修改team_match_signups表，将主键team_match_signups_id字段类型由bigint改为varchar
 	- 修改matches_schedule表的side_one_player_one_id、side_one_player_two_id字段内容，将第一种情况改成记为team_match_signups_id
 	- 修改team表，添加team_match_signups_id与organization_id字段，分别与team_match_signups、organization表关联
-- 260210 team_event_matches中的organization_id和team_match_signups_id是不是没用？
-	- 删除team_event_matches中的organization_id和team_match_signups_id？？
+- 260210 team_event_matches中的organization_id和team_match_signups_id是不是没用？不行，teams生成要根据这个表来生成的。
+	- 删除team_event_matches中的organization_id和team_match_signups_id？不行
+- 260211 round_robin_participants表中有关团队赛事分组记录的participant_id_one应该改成存team_match_signups_id
 
 ## 草稿
 ```sql
