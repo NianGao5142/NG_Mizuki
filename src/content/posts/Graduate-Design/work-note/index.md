@@ -599,22 +599,53 @@ FROM
   JOIN match_schedule ms ON tem.master_match_schedule_id = ms.match_schedule_id
 -- 第二种情况：找出match_schedule中表示每个队伍内部的比赛
 SELECT
-  tem.team_match_signups_id,
-  ms.match_id,
-  m.winner_id AS win_team_id,
-  t.team_match_signups_id AS win_team_match_signups_id
+--   tem.team_match_signups_id,
+--   ms.match_id,
+--   m.winner_id AS win_tiny_team_id,-- 此处的team指代对阵时的双方
+  t.team_match_signups_id,
+  COUNT(t.team_match_signups_id) AS win_count
 FROM
   team_event_matches tem
+  JOIN team_match_signups tms ON tem.team_match_signups_id = tms.team_match_signups_id
   JOIN match_schedule ms ON tem.match_schedule_id = ms.match_schedule_id
   JOIN matches m ON ms.match_id = m.match_id
   JOIN teams t ON m.winner_id = t.team_id
+  JOIN round_robin_participants rrp ON tem.team_match_signups_id = rrp.participant_id_one
+  WHERE tem.team_event_code = "TEAM-CC24129B"
+    AND ms.division_id = "div-03fd4f8e805edecc356a4b6c06cbb285"
+    AND ms.tournament_id = "257de693732eb1bdb4ab69aaada3a6e2"
+    AND rrp.group_number = 1
+  GROUP BY t.team_match_signups_id
+  
+
+
+-- AI
+-- 单项赛胜场数
+SELECT 
+    t.participant_one_id AS player_id,
+    COUNT(m.winner_id) AS win_count
+FROM 
+    teams t
+JOIN 
+    matches m ON t.team_id = m.winner_id
+WHERE 
+    t.is_team_event = 0
+GROUP BY 
+    t.participant_one_id;
+
+-- 团体赛胜场数
+SELECT 
+    tem.team_match_signups_id AS team_id,
+    COUNT(CASE WHEN tem.is_winner = 1 THEN 1 END) AS win_count
+FROM 
+    team_event_matches tem
+GROUP BY 
+    tem.team_match_signups_id;
 
 
 
 
-
-
-
+SELECT * FROM information_schema.columns WHERE column_name='group_id';
 
 
 
