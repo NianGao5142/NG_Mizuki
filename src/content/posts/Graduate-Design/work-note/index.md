@@ -519,7 +519,7 @@ order by master_match_schedule_id;
   - 这两种记录由team_event_matches tm表记录
     - tm.master_match_schedule_id 是记录第一种的match_id的，tm.match_schedule_id是记录团体比赛内具体的各项比赛的
 	  - 查找比赛的时候利用team_event_code来查询第一种的match_schedule记录，也可以利用team_event_matches查询出第二种的match_schedule
-## **本次实现记录**
+## **实现记录**
 思路：晋级队伍 -> 各队伍胜场次
 - 260203 2023年羽毛球赛竞赛规则 p101
 - 260204 一个组织不只对应一个队伍，用teamcode做限制，修改以上sql
@@ -531,6 +531,8 @@ order by master_match_schedule_id;
 - 260210 team_event_matches中的organization_id和team_match_signups_id是不是没用？不行，teams生成要根据这个表来生成的。
 	- 删除team_event_matches中的organization_id和team_match_signups_id？不行
 - 260211 round_robin_participants表中有关团队赛事分组记录的participant_id_one应该改成存team_match_signups_id
+- 260212 （胜场数 -> 胜次 -> 净胜局【-> 胜次】-> 净胜分数【-> 胜次】【-> 抽签】）从DB查找tms1的对阵结果（胜次）
+- 260213 match_schedule表中添加team_one_id与team_two_id字段，表示该赛事由这两个小队进行对阵
 
 ## 草稿
 ```sql
@@ -597,11 +599,11 @@ SELECT
 FROM
   team_event_matches tem
   JOIN match_schedule ms ON tem.master_match_schedule_id = ms.match_schedule_id
--- 第二种情况：找出match_schedule中表示每个队伍内部的比赛
+-- 第二种情况：找出match_schedule中表示每个队伍内部的比赛（胜场数）
 SELECT
 --   tem.team_match_signups_id,
 --   ms.match_id,
---   m.winner_id AS win_tiny_team_id,-- 此处的team指代对阵时的双方
+--   m.winner_id AS win_tiny_team_id,-- 此处的team指代对阵时的一方
   t.team_match_signups_id,
   COUNT(t.team_match_signups_id) AS win_count
 FROM
@@ -618,8 +620,45 @@ FROM
   GROUP BY t.team_match_signups_id
   
 
+-- 查询选手对阵结果
+SELECT 
+  CASE 
+    WHEN t.participant_one_id = #{participantId} 
+      OR t.participant_two_id = #{participantId} 
+    THEN 'WIN'
+    ELSE 'LOSE'
+  END AS result
+FROM matches m
+JOIN teams t ON m.winner_id = t.team_id
+WHERE m.match_id = #{matchId}
+AND (t.participant_one_id = #{participantId} OR t.participant_two_id = #{participantId})
 
--- AI
+-- 查询tms队伍对阵结果（胜次：即team_event_matches表中master_match_schedule字段记录的比赛胜利次数）
+SELECT
+  tem.team_match_signups_id,
+  ms.match_schedule_name,
+  t1.team_match_signups_id AS team_match_signups_one,
+  t2.team_match_signups_id AS team_match_signups_two,
+  CASE WHEN t.team_match_signups_id = tem.team_match_signups_id
+    THEN 1
+    ELSE 0
+  END AS result
+FROM team_event_matches tem
+  JOIN match_schedule ms ON tem.match_schedule_id = ms.match_schedule_id
+  JOIN matches m ON ms.match_id = m.match_id
+  JOIN teams t ON m.winner_id = t.team_id
+  JOIN teams t1 ON ms.team_one_id = t1.team_id
+  JOIN teams t2 ON ms.team_two_id = t2.team_id
+WHERE tem.team_event_code = "TEAM-CC24129B"
+  AND ms.event_type = "mens_singles"
+  AND t.is_team_event = 1
+
+
+
+
+-- ----------------------------------------------------------AI------------------------------------------------------------------
+
+-- 
 -- 单项赛胜场数
 SELECT 
     t.participant_one_id AS player_id,
@@ -641,11 +680,75 @@ FROM
     team_event_matches tem
 GROUP BY 
     tem.team_match_signups_id;
+    
+-- 步骤：计算某个团体赛中每个队伍的得分
+SELECT 
+    p.organization_id,
+    COUNT(m.winner_id) as team_score
+FROM match_schedule ms
+  JOIN matches m ON ms.match_id = m.match_id
+  JOIN participants p ON (
+      ms.side_one_player_one_id = p.participant_id OR
+      ms.side_one_player_two_id = p.participant_id OR
+      ms.side_two_player_one_id = p.participant_id OR
+      ms.side_two_player_two_id = p.participant_id
+  )
+WHERE ms.team_event_code = 'TEAM-CC24129B'
+  AND m.winner_id IS NOT NULL
+  AND m.winner_id = p.participant_id
+GROUP BY p.organization_id;
 
 
 
 
 SELECT * FROM information_schema.columns WHERE column_name='group_id';
+
+
+
+
+UPDATE match_schedule ms
+SET ms.team_one_id = (
+  SELECT t.team_id
+  FROM teams t
+  WHERE t.match_id = ms.match_id
+  AND (
+      t.participant_one_id = ms.side_one_player_one_id
+      OR t.participant_two_id = ms.side_one_player_one_id
+      OR t.participant_one_id = ms.side_one_player_two_id
+      OR t.participant_two_id = ms.side_one_player_two_id
+  )
+  LIMIT 1
+)
+WHERE ms.match_id IS NOT NULL
+  AND ms.team_event_code IS NOT NULL
+
+UPDATE match_schedule ms
+SET ms.team_two_id = (
+  SELECT t.team_id
+  FROM teams t
+  WHERE t.match_id = ms.match_id
+  AND (
+      t.participant_one_id = ms.side_two_player_one_id
+      OR t.participant_two_id = ms.side_two_player_one_id
+      OR t.participant_one_id = ms.side_two_player_two_id
+      OR t.participant_two_id = ms.side_two_player_two_id
+  )
+  LIMIT 1
+)
+WHERE ms.match_id IS NOT NULL
+  AND ms.team_event_code IS NOT NULL
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
