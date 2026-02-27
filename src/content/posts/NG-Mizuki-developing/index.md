@@ -13,4 +13,8 @@ pubDate: 2026-02-27
 ---
 ****
 # 260227
-- 添加pdf读取显示功能
+- Finished
+	- 添加pdf、docx文件读取渲染功能
+- un-Finished
+- TODO
+	- 链接展示功能
