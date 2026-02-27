@@ -4,7 +4,7 @@ interface Props {
 }
 
 const { src } = Astro.props;
-const uniqueId = `word-viewer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+const uniqueId = `word-viewer-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 ---
 
 <div class="word-viewer-container" id={uniqueId} data-src={src}>
