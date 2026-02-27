@@ -81,6 +81,7 @@ const contentMappings = [
 	{ src: "spec", dest: "src/content/spec" },
 	{ src: "data", dest: "src/data" },
 	{ src: "images", dest: "public/images" },
+	{ src: "resources/documents", dest: "src/content/resources/documents" },
 	{ src: "resources/documents", dest: "public/content/resources/documents" },
 	{ src: "resources/data.ts", dest: "src/content/resources/data.ts" },
 ];
@@ -94,8 +95,32 @@ for (const mapping of contentMappings) {
 		continue;
 	}
 
-	// 如果目标已存在且不是符号链接,备份它
-	if (fs.existsSync(destPath) && !fs.lstatSync(destPath).isSymbolicLink()) {
+	if (fs.existsSync(destPath)) {
+		const destStat = fs.lstatSync(destPath);
+		if (destStat.isSymbolicLink()) {
+			try {
+				const realDestPath = fs.realpathSync(destPath);
+				const realSrcPath = fs.realpathSync(srcPath);
+				if (realDestPath === realSrcPath) {
+					console.log(
+						`Symbolic link already correct: ${mapping.dest} -> ${mapping.src}`,
+					);
+					continue;
+				}
+			} catch (e) {
+				// 符号链接可能已损坏，继续处理
+			}
+		} else {
+			const srcStat = fs.statSync(srcPath);
+			if (
+				!srcStat.isDirectory() &&
+				destStat.size === srcStat.size &&
+				destStat.mtimeMs >= srcStat.mtimeMs
+			) {
+				console.log(`File already up to date: ${mapping.dest}`);
+				continue;
+			}
+		}
 		const backupPath = `${destPath}.backup`;
 		console.log(
 			`Backing up existing content: ${mapping.dest} -> ${mapping.dest}.backup`,
@@ -106,17 +131,20 @@ for (const mapping of contentMappings) {
 		fs.renameSync(destPath, backupPath);
 	}
 
-	// 删除现有的符号链接
-	if (fs.existsSync(destPath)) {
-		fs.unlinkSync(destPath);
-	}
+	const isDir = fs.statSync(srcPath).isDirectory();
 
-	// 创建符号链接 (Windows 需要管理员权限,否则复制文件)
-	try {
-		const relPath = path.relative(path.dirname(destPath), srcPath);
-		fs.symlinkSync(relPath, destPath, "junction");
-		console.log(`Created symbolic link: ${mapping.dest} -> ${mapping.src}`);
-	} catch (error) {
+	if (isDir) {
+		try {
+			const relPath = path.relative(path.dirname(destPath), srcPath);
+			fs.symlinkSync(relPath, destPath, "junction");
+			console.log(
+				`Created symbolic link: ${mapping.dest} -> ${mapping.src}`,
+			);
+		} catch (error) {
+			console.log(`Copying content: ${mapping.src} -> ${mapping.dest}`);
+			copyRecursive(srcPath, destPath);
+		}
+	} else {
 		console.log(`Copying content: ${mapping.src} -> ${mapping.dest}`);
 		copyRecursive(srcPath, destPath);
 	}
@@ -135,6 +163,17 @@ function copyRecursive(src, dest) {
 			copyRecursive(path.join(src, file), path.join(dest, file));
 		}
 	} else {
+		const destDir = path.dirname(dest);
+		if (!fs.existsSync(destDir)) {
+			fs.mkdirSync(destDir, { recursive: true });
+		}
+		if (fs.existsSync(dest)) {
+			if (fs.lstatSync(dest).isSymbolicLink()) {
+				fs.unlinkSync(dest);
+			} else {
+				fs.rmSync(dest, { force: true });
+			}
+		}
 		fs.copyFileSync(src, dest);
 	}
 }
