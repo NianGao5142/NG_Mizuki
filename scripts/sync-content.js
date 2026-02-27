@@ -81,6 +81,8 @@ const contentMappings = [
 	{ src: "spec", dest: "src/content/spec" },
 	{ src: "data", dest: "src/data" },
 	{ src: "images", dest: "public/images" },
+	{ src: "resources/documents", dest: "public/content/resources/documents" },
+	{ src: "resources/data.ts", dest: "src/content/resources/data.ts" },
 ];
 
 for (const mapping of contentMappings) {
@@ -170,3 +172,4 @@ try {
 } catch (err) {
 	console.warn("⚠️ Failed to write content version:", err.message);
 }
+
