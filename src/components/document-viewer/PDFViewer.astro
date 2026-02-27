@@ -1,0 +1,294 @@
+---
+interface Props {
+	src: string;
+}
+
+const { src } = Astro.props;
+---
+
+<div class="pdf-viewer-container" data-src={src}>
+	<div class="pdf-toolbar">
+		<button class="toolbar-btn zoom-out-btn" title="缩小">
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<circle cx="11" cy="11" r="8"></circle>
+				<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+				<line x1="8" y1="11" x2="14" y2="11"></line>
+			</svg>
+		</button>
+		<span class="zoom-level">100%</span>
+		<button class="toolbar-btn zoom-in-btn" title="放大">
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<circle cx="11" cy="11" r="8"></circle>
+				<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+				<line x1="11" y1="8" x2="11" y2="14"></line>
+				<line x1="8" y1="11" x2="14" y2="11"></line>
+			</svg>
+		</button>
+		<div class="toolbar-divider"></div>
+		<button class="toolbar-btn prev-page-btn" title="上一页">
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<polyline points="15 18 9 12 15 6"></polyline>
+			</svg>
+		</button>
+		<span class="page-info">
+			Page <span class="current-page">1</span> of <span class="total-pages">0</span>
+		</span>
+		<button class="toolbar-btn next-page-btn" title="下一页">
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<polyline points="9 18 15 12 9 6"></polyline>
+			</svg>
+		</button>
+	</div>
+	<div class="pdf-canvas-wrapper">
+		<div class="loading-indicator">加载中...</div>
+		<canvas class="pdf-canvas"></canvas>
+	</div>
+</div>
+
+<script is:inline>
+	(function() {
+		var PDFJS_VERSION = '4.4.168';
+
+		function initPDFViewer(container) {
+			var pdfSrc = container.dataset.src;
+			var canvas = container.querySelector('.pdf-canvas');
+			var ctx = canvas.getContext('2d');
+			var loading = container.querySelector('.loading-indicator');
+			var zoomLevelEl = container.querySelector('.zoom-level');
+			var currentPageEl = container.querySelector('.current-page');
+			var totalPagesEl = container.querySelector('.total-pages');
+
+			var pdfDoc = null;
+			var pageNum = 1;
+			var pageRendering = false;
+			var pageNumPending = null;
+			var scale = 1.0;
+
+			function renderPage(num) {
+				pageRendering = true;
+				loading.style.display = 'block';
+
+				pdfDoc.getPage(num).then(function(page) {
+					var viewport = page.getViewport({ scale: scale });
+					canvas.height = viewport.height;
+					canvas.width = viewport.width;
+
+					var renderContext = {
+						canvasContext: ctx,
+						viewport: viewport,
+					};
+
+					var renderTask = page.render(renderContext);
+
+					renderTask.promise.then(function() {
+						pageRendering = false;
+						loading.style.display = 'none';
+
+						if (pageNumPending !== null) {
+							renderPage(pageNumPending);
+							pageNumPending = null;
+						}
+					});
+				});
+
+				currentPageEl.textContent = num;
+			}
+
+			function queueRenderPage(num) {
+				if (pageRendering) {
+					pageNumPending = num;
+				} else {
+					renderPage(num);
+				}
+			}
+
+			function onPrevPage() {
+				if (pageNum <= 1) return;
+				pageNum--;
+				queueRenderPage(pageNum);
+			}
+
+			function onNextPage() {
+				if (pageNum >= pdfDoc.numPages) return;
+				pageNum++;
+				queueRenderPage(pageNum);
+			}
+
+			function onZoomIn() {
+				if (scale >= 3.0) return;
+				scale += 0.25;
+				zoomLevelEl.textContent = Math.round(scale * 100) + '%';
+				queueRenderPage(pageNum);
+			}
+
+			function onZoomOut() {
+				if (scale <= 0.5) return;
+				scale -= 0.25;
+				zoomLevelEl.textContent = Math.round(scale * 100) + '%';
+				queueRenderPage(pageNum);
+			}
+
+			container.querySelector('.prev-page-btn').addEventListener('click', onPrevPage);
+			container.querySelector('.next-page-btn').addEventListener('click', onNextPage);
+			container.querySelector('.zoom-in-btn').addEventListener('click', onZoomIn);
+			container.querySelector('.zoom-out-btn').addEventListener('click', onZoomOut);
+
+			function loadPDF() {
+				var loadingTask = pdfjsLib.getDocument(pdfSrc);
+				loadingTask.promise.then(
+					function(pdf) {
+						pdfDoc = pdf;
+						totalPagesEl.textContent = pdf.numPages;
+						renderPage(pageNum);
+					},
+					function(reason) {
+						console.error('Error loading PDF:', reason);
+						loading.textContent = '加载 PDF 失败';
+					}
+				);
+			}
+
+			if (typeof pdfjsLib === 'undefined') {
+				var script = document.createElement('script');
+				script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + PDFJS_VERSION + '/pdf.min.mjs';
+				script.type = 'module';
+				script.onload = function() {
+					window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + PDFJS_VERSION + '/pdf.worker.min.mjs';
+					loadPDF();
+				};
+				script.onerror = function() {
+					loading.textContent = '加载 PDF 查看器失败';
+				};
+				document.head.appendChild(script);
+			} else {
+				loadPDF();
+			}
+		}
+
+		function initAllViewers() {
+			var containers = document.querySelectorAll('.pdf-viewer-container');
+			containers.forEach(function(container) {
+				if (!container.dataset.initialized) {
+					container.dataset.initialized = 'true';
+					initPDFViewer(container);
+				}
+			});
+		}
+
+		initAllViewers();
+
+		document.addEventListener('astro:page-load', function() {
+			initAllViewers();
+		});
+	})();
+</script>
+
+<style>
+	.pdf-viewer-container {
+		width: 100%;
+		max-width: 1200px;
+		margin: 0 auto;
+		background: var(--card-bg);
+		border-radius: 12px;
+		overflow: hidden;
+		border: 1px solid var(--line-divider);
+	}
+
+	.pdf-toolbar {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		background: var(--card-bg);
+		border-bottom: 1px solid var(--line-divider);
+		flex-wrap: wrap;
+	}
+
+	.toolbar-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		padding: 0;
+		background: transparent;
+		border: 1px solid var(--line-divider);
+		border-radius: 6px;
+		cursor: pointer;
+		color: var(--text-primary);
+		transition: all 0.2s ease;
+	}
+
+	.toolbar-btn:hover:not(:disabled) {
+		background: var(--primary);
+		border-color: var(--primary);
+		color: white;
+	}
+
+	.toolbar-btn:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.toolbar-divider {
+		width: 1px;
+		height: 24px;
+		background: var(--line-divider);
+	}
+
+	.zoom-level,
+	.page-info {
+		font-size: 0.875rem;
+		color: var(--text-muted);
+		white-space: nowrap;
+	}
+
+	.page-info span {
+		color: var(--text-primary);
+		font-weight: 500;
+	}
+
+	.pdf-canvas-wrapper {
+		position: relative;
+		min-height: 400px;
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		padding: 2rem;
+		background: var(--card-bg);
+	}
+
+	.pdf-canvas {
+		max-width: 100%;
+		height: auto;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
+
+	.loading-indicator {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		padding: 1rem 2rem;
+		background: var(--card-bg);
+		border-radius: 8px;
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	@media (max-width: 640px) {
+		.pdf-toolbar {
+			gap: 0.5rem;
+			padding: 0.5rem;
+		}
+
+		.toolbar-btn {
+			width: 32px;
+			height: 32px;
+		}
+
+		.pdf-canvas-wrapper {
+			padding: 1rem;
+		}
+	}
+</style>

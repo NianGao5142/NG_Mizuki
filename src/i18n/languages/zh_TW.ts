@@ -65,6 +65,16 @@ export const zh_TW: Translation = {
 	[Key.devicesSubtitle]: "這裡展示了我日常使用的各類設備",
 	[Key.devicesViewDetails]: "查看詳情",
 
+	// 資源文檔頁面
+	[Key.resources]: "資源文檔",
+	[Key.resourcesSubtitle]: "查看和下載 PDF、Word 文檔",
+	[Key.resourcesCount]: "個文檔",
+	[Key.resourcesView]: "查看文檔",
+	[Key.resourcesDownload]: "下載文檔",
+	[Key.resourcesBack]: "返回列表",
+	[Key.resourcesEmpty]: "暫無文檔",
+	[Key.resourcesEmptyDesc]: "還沒有添加任何文檔資源",
+
 	// 番劇頁面
 	[Key.animeTitle]: "我的追番記錄",
 	[Key.animeSubtitle]: "記錄我的二次元之旅",

@@ -1,0 +1,287 @@
+---
+import { siteConfig } from '../config';
+import MainGridLayout from '../layouts/MainGridLayout.astro';
+import { resourceDocuments, getAllCategories } from '../../content/resources/data';
+import I18nKey from '../i18n/i18nKey';
+import { i18n } from '../i18n/translation';
+
+if (!siteConfig.featurePages.resources) {
+	return Astro.redirect('/404/');
+}
+
+const categories = getAllCategories();
+const pdfCount = resourceDocuments.filter((doc) => doc.type === 'pdf').length;
+const docxCount = resourceDocuments.filter((doc) => doc.type === 'docx').length;
+---
+
+<MainGridLayout title={i18n(I18nKey.resources)} description="查看和下载 PDF、Word 文档">
+	<script>
+		import('../scripts/right-sidebar-layout.js');
+	</script>
+	<div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+		<div class="card-base z-10 px-4 py-4 md:px-6 md:py-5 relative w-full">
+			<div class="relative max-w-6xl w-full px-2 md:px-0">
+				<div class="resources-header mb-6">
+					<div class="header-content">
+						<div class="header-info">
+							<h1 class="resources-title text-xl md:text-2xl lg:text-3xl font-bold text-90 mb-1">
+								{i18n(I18nKey.resources)}
+							</h1>
+							<p class="resources-subtitle text-sm md:text-base lg:text-lg text-75">
+								{i18n(I18nKey.resourcesSubtitle)}
+							</p>
+						</div>
+						<div class="header-stats">
+							<div class="stat-item text-center">
+								<span class="stat-number text-lg md:text-xl lg:text-2xl font-bold text-[var(--primary)]">
+									{resourceDocuments.length}
+								</span>
+								<span class="stat-label text-xs md:text-sm lg:text-base text-75">
+									{i18n(I18nKey.resourcesCount)}
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{resourceDocuments.length === 0 ? (
+					<div class="empty-state text-center py-12">
+						<div class="empty-icon mb-4">
+							<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+								<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+								<polyline points="14 2 14 8 20 8"></polyline>
+								<line x1="12" y1="18" x2="12" y2="12"></line>
+								<line x1="9" y1="15" x2="15" y2="15"></line>
+							</svg>
+						</div>
+						<h3 class="empty-title text-lg font-semibold text-90 mb-2">
+							{i18n(I18nKey.resourcesEmpty)}
+						</h3>
+						<p class="empty-description text-75 text-sm">
+							{i18n(I18nKey.resourcesEmptyDesc)}
+						</p>
+					</div>
+				) : (
+					<div class="resources-grid">
+						{resourceDocuments.map((doc) => (
+							<div class="resource-card">
+								<div class="resource-icon">
+									{doc.type === 'pdf' ? (
+										<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+											<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+											<polyline points="14 2 14 8 20 8"></polyline>
+											<text x="12" y="16" text-anchor="middle" font-size="6" font-weight="bold">PDF</text>
+										</svg>
+									) : (
+										<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+											<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+											<polyline points="14 2 14 8 20 8"></polyline>
+											<text x="12" y="16" text-anchor="middle" font-size="5" font-weight="bold">DOCX</text>
+										</svg>
+									)}
+								</div>
+								<div class="resource-info">
+									<h3 class="resource-title text-90">{doc.title}</h3>
+									{doc.description && (
+										<p class="resource-description text-75">{doc.description}</p>
+									)}
+									<div class="resource-meta">
+										<span class={`resource-type ${doc.type}`}>{doc.type.toUpperCase()}</span>
+										<span class="resource-date text-75">{doc.uploadDate}</span>
+										{doc.category && <span class="resource-category text-75">{doc.category}</span>}
+									</div>
+								</div>
+								<a href={`/resources/view/${doc.id}/`} class="resource-link">
+									{i18n(I18nKey.resourcesView)}
+								</a>
+							</div>
+						))}
+					</div>
+				)}
+			</div>
+		</div>
+	</div>
+</MainGridLayout>
+
+<style>
+	.card-base {
+		background: var(--card-bg);
+		border: 1px solid var(--line-divider);
+		transition: all 0.3s ease;
+	}
+
+	.resources-header {
+		padding: 1.5rem;
+		border-radius: 12px;
+		background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark, var(--primary)) 100%);
+		color: white;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.header-content {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		position: relative;
+		z-index: 1;
+	}
+
+	.resources-title {
+		color: white;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	}
+
+	.resources-subtitle {
+		color: rgba(255, 255, 255, 0.9);
+	}
+
+	.stat-number {
+		color: white;
+	}
+
+	.stat-label {
+		color: rgba(255, 255, 255, 0.8);
+	}
+
+	.empty-state {
+		padding: 4rem 2rem;
+	}
+
+	.empty-icon {
+		color: var(--text-muted);
+		opacity: 0.5;
+	}
+
+	.empty-title {
+		color: var(--text-primary);
+	}
+
+	.empty-description {
+		color: var(--text-muted);
+	}
+
+	.resources-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.resource-card {
+		background: var(--card-bg);
+		border: 1px solid var(--line-divider);
+		border-radius: 12px;
+		padding: 1.5rem;
+		transition: all 0.3s ease;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.resource-card:hover {
+		transform: translateY(-4px);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+		border-color: var(--primary);
+	}
+
+	.resource-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: 1rem;
+		padding: 1rem;
+		background: var(--card-bg);
+		border-radius: 8px;
+		color: var(--primary);
+	}
+
+	.resource-info {
+		flex: 1;
+	}
+
+	.resource-title {
+		font-size: 1.125rem;
+		font-weight: 600;
+		margin-bottom: 0.5rem;
+		line-height: 1.4;
+	}
+
+	.resource-description {
+		font-size: 0.875rem;
+		margin-bottom: 1rem;
+		line-height: 1.5;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.resource-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.resource-type {
+		font-size: 0.75rem;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		font-weight: 600;
+		text-transform: uppercase;
+	}
+
+	.resource-type.pdf {
+		background: rgba(220, 38, 38, 0.1);
+		color: #dc2626;
+	}
+
+	.resource-type.docx {
+		background: rgba(37, 99, 235, 0.1);
+		color: #2563eb;
+	}
+
+	.resource-date,
+	.resource-category {
+		font-size: 0.75rem;
+		padding: 0.25rem 0.5rem;
+		background: var(--line-divider);
+		border-radius: 4px;
+	}
+
+	.resource-link {
+		display: block;
+		text-align: center;
+		padding: 0.75rem;
+		background: var(--primary);
+		color: white;
+		text-decoration: none;
+		border-radius: 6px;
+		font-weight: 500;
+		transition: all 0.2s ease;
+	}
+
+	.resource-link:hover {
+		opacity: 0.9;
+		transform: translateY(-1px);
+	}
+
+	@media (max-width: 640px) {
+		.resources-header {
+			padding: 1rem;
+		}
+
+		.header-content {
+			flex-direction: column;
+			text-align: center;
+			gap: 0.75rem;
+		}
+
+		.resources-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.resource-card {
+			padding: 1rem;
+		}
+	}
+</style>

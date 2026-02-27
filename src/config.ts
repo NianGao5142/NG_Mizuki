@@ -46,6 +46,7 @@ export const siteConfig: SiteConfig = {
 		timeline: true, // 时间线页面开关
 		albums: true, // 相册页面开关
 		devices: true, // 设备页面开关
+		resources: true, // 资源文档页面开关
 	},
 
 	// 顶栏标题配置
@@ -290,6 +291,11 @@ export const navBarConfig: NavBarConfig = {
 					url: "devices/",
 					icon: "material-symbols:devices",
 					external: false,
+				},
+				{
+					name: "Resources",
+					url: "/resources/",
+					icon: "material-symbols:folder-open",
 				},
 			],
 		},
@@ -678,3 +684,4 @@ export const umamiConfig = {
 <script defer src="XXXX.XXX" data-website-id="ABCD1234"></script>
   `.trim(), // 上面填你要插入的Script,不用再去Layout中插入
 } as const;
+

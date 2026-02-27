@@ -65,6 +65,16 @@ export const ja: Translation = {
 	[Key.devicesSubtitle]: "ここに私の日常で使用するデバイスを表示します",
 	[Key.devicesViewDetails]: "詳細を見る",
 
+	// リソースページ
+	[Key.resources]: "リソース",
+	[Key.resourcesSubtitle]: "PDF、Wordドキュメントの表示とダウンロード",
+	[Key.resourcesCount]: "ドキュメント",
+	[Key.resourcesView]: "ドキュメントを見る",
+	[Key.resourcesDownload]: "ダウンロード",
+	[Key.resourcesBack]: "一覧に戻る",
+	[Key.resourcesEmpty]: "ドキュメントなし",
+	[Key.resourcesEmptyDesc]: "まだドキュメントリソースが追加されていません",
+
 	// アニメページ
 	[Key.animeTitle]: "私のアニメリスト",
 	[Key.animeSubtitle]: "私の二次元の旅を記録する",

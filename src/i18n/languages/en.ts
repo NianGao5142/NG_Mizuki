@@ -111,6 +111,16 @@ export const en: Translation = {
 	[Key.albumsPhotoCount]: "photo",
 	[Key.albumsPhotosCount]: "photos",
 
+	// Resources Page
+	[Key.resources]: "Resources",
+	[Key.resourcesSubtitle]: "View and download PDF, Word documents",
+	[Key.resourcesCount]: "documents",
+	[Key.resourcesView]: "View Document",
+	[Key.resourcesDownload]: "Download",
+	[Key.resourcesBack]: "Back to List",
+	[Key.resourcesEmpty]: "No Documents",
+	[Key.resourcesEmptyDesc]: "No document resources have been added yet",
+
 	// Projects Page
 	[Key.projects]: "Projects",
 	[Key.projectsSubtitle]: "My development project portfolio",

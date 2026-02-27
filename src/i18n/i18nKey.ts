@@ -105,6 +105,16 @@ enum I18nKey {
 	devicesSubtitle = "devicesSubtitle",
 	devicesViewDetails = "devicesViewDetails",
 
+	// 资源文档页面
+	resources = "resources",
+	resourcesSubtitle = "resourcesSubtitle",
+	resourcesCount = "resourcesCount",
+	resourcesView = "resourcesView",
+	resourcesDownload = "resourcesDownload",
+	resourcesBack = "resourcesBack",
+	resourcesEmpty = "resourcesEmpty",
+	resourcesEmptyDesc = "resourcesEmptyDesc",
+
 	// 项目展示页面
 	projects = "projects",
 	projectsSubtitle = "projectsSubtitle",

@@ -107,6 +107,16 @@ export const zh_CN: Translation = {
 	[Key.devicesSubtitle]: "这里展示了我日常使用的各类设备",
 	[Key.devicesViewDetails]: "查看详情",
 
+	// 资源文档页面
+	[Key.resources]: "资源文档",
+	[Key.resourcesSubtitle]: "查看和下载 PDF、Word 文档",
+	[Key.resourcesCount]: "个文档",
+	[Key.resourcesView]: "查看文档",
+	[Key.resourcesDownload]: "下载文档",
+	[Key.resourcesBack]: "返回列表",
+	[Key.resourcesEmpty]: "暂无文档",
+	[Key.resourcesEmptyDesc]: "还没有添加任何文档资源",
+
 	// 项目展示页面
 	[Key.projects]: "项目展示",
 	[Key.projectsSubtitle]: "我的开发项目作品集",
