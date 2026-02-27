@@ -15,6 +15,13 @@ draft: false
 date: 2026-02-03
 pubDate: 2026-02-03
 ---
+# Docker部署
+创建docker网络：
+```
+sudo docker network create bms-network
+```
+前端：[Docker容器部署前端Vue服务——手把手教学_docker部署vue-CSDN博客](https://blog.csdn.net/xiaolong124/article/details/123458100)
+****
 # ？
 1. 在注册报名管理的里面的比赛项目模块里
     - 创建项目之后
@@ -532,7 +539,8 @@ order by master_match_schedule_id;
 	- 删除team_event_matches中的organization_id和team_match_signups_id？不行
 - 260211 round_robin_participants表中有关团队赛事分组记录的participant_id_one应该改成存team_match_signups_id
 - 260212 （胜场数 -> 胜次 -> 净胜局【-> 胜次】-> 净胜分数【-> 胜次】【-> 抽签】）从DB查找tms1的对阵结果（胜次）
-- 260213 match_schedule表中添加team_one_id与team_two_id字段，表示该赛事由这两个小队进行对阵
+- 260213 match_schedule表中添加team_one_id与team_two_id字段，表示该局赛事由这两个小队进行对阵
+- 260217 问题：团队赛中，team表生成记录不完全
 
 ## 草稿
 ```sql
@@ -619,21 +627,73 @@ FROM
     AND rrp.group_number = 1
   GROUP BY t.team_match_signups_id
   
-
+-- ------------------------------规则 1.3.2 两人胜场相同 → 看交手-------------------------------------------------------------------------------------------------------------
 -- 查询选手对阵结果
 SELECT 
   CASE 
-    WHEN t.participant_one_id = #{participantId} 
-      OR t.participant_two_id = #{participantId} 
+    WHEN t.participant_one_id = "p002_m07"
+      OR t.participant_two_id = "p002_m07"
     THEN 'WIN'
     ELSE 'LOSE'
   END AS result
 FROM matches m
 JOIN teams t ON m.winner_id = t.team_id
-WHERE m.match_id = #{matchId}
-AND (t.participant_one_id = #{participantId} OR t.participant_two_id = #{participantId})
+WHERE m.match_id = "5846ad7d-9df2-4e5a-b12d-e1965570992d"
+AND (t.participant_one_id = "p002_m07" OR t.participant_two_id = "p003_m01")
 
--- 查询tms队伍对阵结果（胜次：即team_event_matches表中master_match_schedule字段记录的比赛胜利次数）
+-- 查询tms队伍对阵结果（补全team_event_matches表is_winner字段）（胜次：即team_event_matches表中master_match_schedule字段记录的比赛胜利次数）
+SELECT
+  tem.team_match_signups_id,
+  ms.match_schedule_id,
+  ms.match_id,
+  ms.match_schedule_name,
+--   ms.division_id,
+  t1.team_match_signups_id AS team_match_signups_one,
+  t2.team_match_signups_id AS team_match_signups_two,
+  CASE WHEN t.team_match_signups_id = tem.team_match_signups_id
+    THEN 1
+    ELSE 0
+  END AS result
+FROM
+  team_event_matches tem
+  JOIN match_schedule ms ON tem.match_schedule_id = ms.match_schedule_id
+  JOIN matches m ON ms.match_id = m.match_id
+  JOIN teams t ON m.winner_id = t.team_id
+  JOIN teams t1 ON ms.team_one_id = t1.team_id
+  JOIN teams t2 ON ms.team_two_id = t2.team_id
+WHERE tem.team_event_code = "TEAM-CC24129B"
+  AND ms.division_id = "div-03fd4f8e805edecc356a4b6c06cbb285"
+--   AND ms.event_type = "mens_singles"
+  AND t.is_team_event = 1
+  
+SELECT 
+  tem.team_event_id,
+  t.team_id
+FROM team_event_matches tem
+  JOIN match_schedule ms ON tem.match_schedule_id = ms.match_schedule_id
+  JOIN teams t ON ms.match_id = t.match_id
+  
+SELECT 
+    tem.team_event_id,
+    tem.team_match_signups_id,
+    t1.team_id AS team_one_id,
+    t1.team_match_signups_id AS team_one_signups_id,
+    t2.team_id AS team_two_id,
+    t2.team_match_signups_id AS team_two_signups_id,
+    ms.match_schedule_name
+FROM team_event_matches tem
+JOIN match_schedule ms 
+    ON tem.match_schedule_id = ms.match_schedule_id
+JOIN teams t1 
+    ON ms.match_id = t1.match_id 
+    AND t1.is_team_event = 1
+JOIN teams t2 
+    ON ms.match_id = t2.match_id 
+    AND t2.is_team_event = 1
+    AND t1.team_id < t2.team_id
+WHERE tem.team_event_code = 'TEAM-CC24129B';
+
+-- 变式，查询两个team_match_signups队伍之间的比赛，判断这两个tms队伍在胜场数相同情况下的名次先后
 SELECT
   tem.team_match_signups_id,
   ms.match_schedule_name,
@@ -650,105 +710,129 @@ FROM team_event_matches tem
   JOIN teams t1 ON ms.team_one_id = t1.team_id
   JOIN teams t2 ON ms.team_two_id = t2.team_id
 WHERE tem.team_event_code = "TEAM-CC24129B"
-  AND ms.event_type = "mens_singles"
+  AND ms.division_id = "div-03fd4f8e805edecc356a4b6c06cbb285"
+--   AND ms.event_type = "mens_singles"
   AND t.is_team_event = 1
+  AND (
+    (t1.team_match_signups_id = '3' AND t2.team_match_signups_id = '1')
+    OR
+    (t1.team_match_signups_id = '1' AND t2.team_match_signups_id = '3')
+  );
+  
+  -- 再变式，贴合项目
+  SELECT
+  tem.team_match_signups_id,
+--   ms.match_schedule_name,
+--   t1.team_match_signups_id AS team_match_signups_one,
+--   t2.team_match_signups_id AS team_match_signups_two,
+  CASE WHEN t.team_match_signups_id = tem.team_match_signups_id
+    THEN "WIN"
+    ELSE "LOSE"
+  END AS result
+FROM team_event_matches tem
+  JOIN match_schedule ms ON tem.match_schedule_id = ms.match_schedule_id
+  JOIN matches m ON ms.match_id = m.match_id
+  JOIN teams t ON m.winner_id = t.team_id
+  JOIN teams t1 ON ms.team_one_id = t1.team_id
+  JOIN teams t2 ON ms.team_two_id = t2.team_id
+WHERE tem.team_event_code = "TEAM-CC24129B"
+  AND ms.division_id = "div-03fd4f8e805edecc356a4b6c06cbb285"
+--   AND ms.event_type = "mens_singles"
+  AND t.is_team_event = 1
+  AND (
+    (t1.team_match_signups_id = '2' AND t2.team_match_signups_id = '1')
+    OR
+    (t1.team_match_signups_id = '1' AND t2.team_match_signups_id = '2')
+  );
+  
+-- ------------------------------≥3队tms：规则 1.3.3 看净胜局数-------------------------------------------------------------------------------------------------------------
+-- 单项赛
+SELECT 
+    t.participant_one_id AS participant_id,
+    SUM(CASE WHEN m.winner_id = t.team_id THEN 1 ELSE 0 END) AS win_count,
+    SUM(CASE WHEN m.winner_id != t.team_id THEN 1 ELSE 0 END) AS lose_count,
+    SUM(CASE WHEN m.winner_id = t.team_id THEN 1 ELSE -1 END) AS net_games
+FROM teams t
+  JOIN matches m ON t.match_id = m.match_id
+WHERE t.participant_one_id = "p003_m01"
+GROUP BY t.participant_one_id
+-- 团体赛 定义：该队(tms)在所有单项比赛中，赢的局数总和，减去，输的局数总和
+SELECT 
+  tem.team_match_signups_id,
+  SUM(CASE WHEN m.winner_id = t.team_id THEN 1 ELSE 0 END) AS win_count,
+  SUM(CASE WHEN m.winner_id != t.team_id THEN 1 ELSE 0 END) AS lose_count,
+  SUM(CASE WHEN m.winner_id = t.team_id THEN 1 ELSE -1 END) AS net_games
+FROM team_event_matches tem
+ JOIN match_schedule ms ON tem.match_schedule_id = ms.match_schedule_id
+ JOIN matches m ON ms.match_id = m.match_id
+ JOIN teams t ON m.match_id = t.match_id
+WHERE tem.team_match_signups_id = '1'
+GROUP BY tem.team_match_signups_id
+-- AI修改过的
+SELECT 
+   tem.team_match_signups_id, 
+   SUM(CASE WHEN t.team_match_signups_id = tem.team_match_signups_id THEN 1 ELSE 0 END) AS win_count, 
+   SUM(CASE WHEN t.team_match_signups_id != tem.team_match_signups_id OR t.team_match_signups_id IS NULL THEN 1 ELSE 0 END) AS lose_count
+FROM team_event_matches tem 
+ JOIN match_schedule ms ON tem.match_schedule_id = ms.match_schedule_id 
+ JOIN matches m ON ms.match_id = m.match_id 
+ LEFT JOIN teams t ON m.winner_id = t.team_id 
+WHERE tem.team_event_code = 'TEAM-CC24129B'
+  AND tem.team_match_signups_id = '1'
+GROUP BY tem.team_match_signups_id
 
-
+  -- 每个tms输掉的比赛数
+SELECT 
+  tem.team_match_signups_id,
+  COUNT(*) AS lose_count
+FROM team_event_matches tem
+JOIN match_schedule ms ON tem.match_schedule_id = ms.match_schedule_id
+JOIN matches m ON ms.match_id = m.match_id
+JOIN teams t ON m.winner_id = t.team_id
+WHERE t.team_match_signups_id != tem.team_match_signups_id
+GROUP BY tem.team_match_signups_id;
 
 
 -- ----------------------------------------------------------AI------------------------------------------------------------------
 
--- 
--- 单项赛胜场数
+SELECT * FROM teams WHERE is_team_event = 1
+SELECT * FROM match_schedule WHERE team_event_code IS NOT NULL
+
+
 SELECT 
-    t.participant_one_id AS player_id,
-    COUNT(m.winner_id) AS win_count
-FROM 
-    teams t
-JOIN 
-    matches m ON t.team_id = m.winner_id
-WHERE 
-    t.is_team_event = 0
-GROUP BY 
-    t.participant_one_id;
-
--- 团体赛胜场数
-SELECT 
-    tem.team_match_signups_id AS team_id,
-    COUNT(CASE WHEN tem.is_winner = 1 THEN 1 END) AS win_count
-FROM 
-    team_event_matches tem
-GROUP BY 
-    tem.team_match_signups_id;
-    
--- 步骤：计算某个团体赛中每个队伍的得分
-SELECT 
-    p.organization_id,
-    COUNT(m.winner_id) as team_score
-FROM match_schedule ms
-  JOIN matches m ON ms.match_id = m.match_id
-  JOIN participants p ON (
-      ms.side_one_player_one_id = p.participant_id OR
-      ms.side_one_player_two_id = p.participant_id OR
-      ms.side_two_player_one_id = p.participant_id OR
-      ms.side_two_player_two_id = p.participant_id
-  )
-WHERE ms.team_event_code = 'TEAM-CC24129B'
-  AND m.winner_id IS NOT NULL
-  AND m.winner_id = p.participant_id
-GROUP BY p.organization_id;
+    TABLE_SCHEMA AS 数据库名,
+    TABLE_NAME AS 表名,
+    COLUMN_NAME AS 字段名,
+    DATA_TYPE AS 数据类型
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE COLUMN_NAME = 'password'        -- 替换为你的字段名
+  AND TABLE_SCHEMA = 'badminton_matches_scoring';    -- 替换为你的数据库名（可选）
 
 
 
+CREATE TABLE `auth_user` (
+    `user_id` varchar(36) NOT NULL,
+    `user_name` varchar(100) NOT NULL COMMENT '用户名',
+    `password` varchar(100) NOT NULL COMMENT '密码，加密',
+    `role_id` int(11) DEFAULT NULL COMMENT '角色ID',
+    `account_locked` tinyint(1) DEFAULT '0' COMMENT '账户是否锁定：1-是，0-否',
+    `is_enabled` tinyint(1) DEFAULT '1' COMMENT '是否启用：1-是，0-否',
+    `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
-SELECT * FROM information_schema.columns WHERE column_name='group_id';
-
-
-
-
-UPDATE match_schedule ms
-SET ms.team_one_id = (
-  SELECT t.team_id
-  FROM teams t
-  WHERE t.match_id = ms.match_id
-  AND (
-      t.participant_one_id = ms.side_one_player_one_id
-      OR t.participant_two_id = ms.side_one_player_one_id
-      OR t.participant_one_id = ms.side_one_player_two_id
-      OR t.participant_two_id = ms.side_one_player_two_id
-  )
-  LIMIT 1
-)
-WHERE ms.match_id IS NOT NULL
-  AND ms.team_event_code IS NOT NULL
-
-UPDATE match_schedule ms
-SET ms.team_two_id = (
-  SELECT t.team_id
-  FROM teams t
-  WHERE t.match_id = ms.match_id
-  AND (
-      t.participant_one_id = ms.side_two_player_one_id
-      OR t.participant_two_id = ms.side_two_player_one_id
-      OR t.participant_one_id = ms.side_two_player_two_id
-      OR t.participant_two_id = ms.side_two_player_two_id
-  )
-  LIMIT 1
-)
-WHERE ms.match_id IS NOT NULL
-  AND ms.team_event_code IS NOT NULL
-
-
-
-
-
-
-
-
-
-
-
-
+CREATE TABLE `auth_role` (
+    `role_id` varchar(36) NOT NULL,
+    `user_name` varchar(100) NOT NULL COMMENT '用户名',
+    `password` varchar(100) NOT NULL COMMENT '密码，加密',
+    `role_id` int(11) DEFAULT NULL COMMENT '角色ID',
+    `account_locked` tinyint(1) DEFAULT '0' COMMENT '账户是否锁定：1-是，0-否',
+    `is_enabled` tinyint(1) DEFAULT '1' COMMENT '是否启用：1-是，0-否',
+    `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 
 
@@ -766,3 +850,16 @@ WHERE ms.match_id IS NOT NULL
 ****
 # 20260210
 - 执裁裁判的设置加一个查看所有的未设置裁判的比赛,在选择比赛的弹窗里面加一个选项，后端代码也修改一下。
+
+****
+# 20260219
+- 实现一下权限登陆功能，必须登陆之后才可以使用
+  - 测试一下成功之后就先放行所有的端口(方便开发)
+  - TournamentAdminFont里面缺少登陆功能实现一下(用这个表permissions)
+    - 前端的登陆页面也实现一下，然后做一下路由限制(不能没有登陆的时候页面不能直接查看)
+
+****
+# 20260226
+- 报名端
+    - 现在报名过的队员应该还是可以在添加运动员的弹窗里面出现
+    - 现在领队的那个填写不了，改一下
