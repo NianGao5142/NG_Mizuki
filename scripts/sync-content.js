@@ -7,6 +7,7 @@ import { loadEnv } from "./load-env.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
+const backupDir = path.join(rootDir, ".content-backups");
 
 loadEnv();
 console.log("Loaded .env configuration file\n");
@@ -85,6 +86,10 @@ const contentMappings = [
 	{ src: "resources/data.ts", dest: "src/content/resources/data.ts" },
 ];
 
+if (!fs.existsSync(backupDir)) {
+	fs.mkdirSync(backupDir, { recursive: true });
+}
+
 for (const mapping of contentMappings) {
 	const srcPath = path.join(CONTENT_DIR, mapping.src);
 	const destPath = path.join(rootDir, mapping.dest);
@@ -120,12 +125,19 @@ for (const mapping of contentMappings) {
 				continue;
 			}
 		}
-		const backupPath = `${destPath}.backup`;
+		const backupPath = path.join(
+			backupDir,
+			mapping.dest.replace(/\//g, path.sep),
+		);
 		console.log(
-			`Backing up existing content: ${mapping.dest} -> ${mapping.dest}.backup`,
+			`Backing up existing content: ${mapping.dest} -> ${backupPath}`,
 		);
 		if (fs.existsSync(backupPath)) {
 			fs.rmSync(backupPath, { recursive: true, force: true });
+		}
+		const backupParentDir = path.dirname(backupPath);
+		if (!fs.existsSync(backupParentDir)) {
+			fs.mkdirSync(backupParentDir, { recursive: true });
 		}
 		fs.renameSync(destPath, backupPath);
 	}
