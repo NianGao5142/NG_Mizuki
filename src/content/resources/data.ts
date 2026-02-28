@@ -101,6 +101,15 @@ export const resourceDocuments: ResourceDocument[] = [
 		uploadDate: "2025-02-27",
 		category: "hello",
 	},
+	{
+		id: "11",
+		title: "开发文档+",
+		filename: "开发文档+.docx",
+		type: "docx",
+		description: "开发文档+",
+		uploadDate: "2025-02-27",
+		category: "hello",
+	},
 ];
 
 export const getDocumentById = (id: string): ResourceDocument | undefined => {
