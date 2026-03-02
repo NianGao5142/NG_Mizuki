@@ -1,28 +1,11 @@
 ---
-<<<<<<< HEAD
-title: 逻辑推理
-published: 2026-01-19
-=======
 title: 判断推理
 published: 2026-03-02
->>>>>>> d57bdd0628a9887259168cc708482b80929a8836
 pinned: false
 description: 公考笔记
 tags:
   - Markdown
   - note
-<<<<<<< HEAD
-category: 公考
-author: niangao5142
-draft: false
-date: 2026-01-19
-pubDate: 2026-01-19
----
-
-# 这是标题
-
-这是正文
-=======
   - 判断推理
 category: 公考
 author: niangao5142
@@ -275,4 +258,3 @@ pubDate: 2026-03-02
 
 
 
->>>>>>> d57bdd0628a9887259168cc708482b80929a8836
