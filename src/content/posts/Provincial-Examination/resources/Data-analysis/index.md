@@ -28,7 +28,9 @@ pubDate: 2026-03-04
 	- 抓住公式$\frac{A}{B}\times\frac{a-b}{1+a}$；a>b $\uparrow$；a<b $\downarrow$；a=b 不变
 - 十字交叉法
 	- ![[Pasted image 20260304215446.png]]
+	- ![Pasted image 20260304215446](./assets/Pasted image 20260304215446.png)
 	- 例：![[Pasted image 20260304220124.png]]
+	- ![Pasted image 20260304220124](./assets/Pasted image 20260304220124.png)
 ## 现期量&基期量
 ### 一、基期量
 
