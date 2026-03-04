@@ -2,7 +2,7 @@
 title: 判断推理
 published: 2026-03-02
 pinned: false
-description: 公考笔记
+description: 公考笔记-判断推理
 tags:
   - Markdown
   - note
@@ -165,7 +165,7 @@ pubDate: 2026-03-02
 #### 二、推理
 - $\rightarrow$、逆否等价、A$\rightarrow$B = $\lnot$A$\lor$B
 - $\lor$、否一推一
-- A$\rightarrow$B = $\lnot$B$\rightarrow$$\lnot$A（否后必否前）= $\lnot$A$\lor$B（否一推一）
+- A$\rightarrow$B = $\lnot$B$\rightarrow\lnot$A（否后必否前）= $\lnot$A$\lor$B（否一推一）
 - A$\lor$B =  $\lnot$A$\rightarrow$B =  $\lnot$B$\rightarrow$A（否一推一）
 ### 集合推理
 #### 特征：逻辑关联词+有的/所有
@@ -179,9 +179,9 @@ pubDate: 2026-03-02
 - 【所有都】A$\rightarrow$B
 - 【有的是】有A$\rightarrow$B
 #### 二、推理
-- A$\rightarrow$B = $\lnot$B$\rightarrow$$\lnot$A => 有B$\rightarrow$A （否后必否前）
+- A$\rightarrow$B = $\lnot$B$\rightarrow\lnot$A => 有B$\rightarrow$A （否后必否前）
 - 有A$\rightarrow$B = 有B$\rightarrow$A 
-- 有A$\rightarrow$$\lnot$B = 有$\lnot$B$\rightarrow$A 
+- 有A$\rightarrow\lnot$B = 有$\lnot$B$\rightarrow$A 
 ### 真假推理
 #### 特征：只有一真
 #### 考法
