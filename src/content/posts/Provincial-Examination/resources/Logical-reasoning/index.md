@@ -240,7 +240,7 @@ pubDate: 2026-03-02
 - 排除（找加强做排除）
 #### 削弱（选项优先级）
 1. 否定论点
-	-  A$\rightarrow$B （A$\land$$\lnot$B；没他更好）
+	-  A$\rightarrow$B （A$\land\lnot$B；没他更好）
 2. 因果倒置
 3. 拆桥
 4. 另有他因
