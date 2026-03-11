@@ -218,6 +218,16 @@ export const resourceDocuments: ResourceDocument[] = [
 		uploadDate: "2025-03-11",
 		category: "总结",
 	},
+	{
+		id: "24",
+		title: "习中特（宏观常用点）",
+		filename: "习中特（宏观常用点）.pdf",
+		type: "pdf",
+		description: "申论资料",
+		uploadDate: "2025-03-11",
+		category: "申论资料",
+	},
+	
 	
 ];
 
