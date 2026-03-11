@@ -209,6 +209,16 @@ export const resourceDocuments: ResourceDocument[] = [
 		uploadDate: "2025-02-27",
 		category: "逻辑推理",
 	},
+	{
+		id: "23",
+		title: "2026考前30分-行测+申论",
+		filename: "2026考前30分-行测+申论.pdf",
+		type: "pdf",
+		description: "总结",
+		uploadDate: "2025-03-11",
+		category: "总结",
+	},
+	
 ];
 
 export const getDocumentById = (id: string): ResourceDocument | undefined => {
