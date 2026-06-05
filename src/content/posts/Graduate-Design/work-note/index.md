@@ -15,6 +15,8 @@ draft: false
 date: 2026-02-03
 pubDate: 2026-02-03
 ---
+# DeepSeek API Key
+sk-ebdd67390319447c814f1da17b9cd9a4
 # Docker部署
 创建docker网络：
 ```
@@ -22,6 +24,19 @@ sudo docker network create bms-network
 ```
 前端：[Docker容器部署前端Vue服务——手把手教学_docker部署vue-CSDN博客](https://blog.csdn.net/xiaolong124/article/details/123458100)
 ****
+# 前端部署
+**badmintonAdminFont**
+```bash
+sudo docker run -d \
+  --name bms_bv2 \
+  -p 80:80 \
+  --network bms-network \
+  -v /user/root/cms_front/cms_admin/default.conf:/etc/nginx/conf.d/default.conf \
+  -v /user/root/cms_front/cms_admin/dist:/usr/share/nginx/html \
+  bms_b:v2
+```
+****
+
 # ？
 1. 在注册报名管理的里面的比赛项目模块里
     - 创建项目之后
@@ -847,6 +862,24 @@ CREATE TABLE `auth_role` (
 
 
 ```
+
+### AI实现提词
+```text
+现在要在​的GenerateTeamMatchPromotePlayers方法中实现生成分组后的团体赛晋级队伍（team_match_signups）的功能，要求最终返回以下形式结果  
+Map<Integer, List<String>> promotedTMSByGroup = new LinkedHashMap<>();用一个Map存储每个组晋级team_match_signups的 ID；  
+在​数据库中，你需要关注以下表：round_robin_participant、team_match_signups、team_event_matches、match_schedule、matches、teams。  
+相关表说明：  
+round_robin_participant表用来记录参赛者分组情况，当round_robin_participant表用来记录team_match_signups的分组情况时，其中的division_id为default，participants_id_one就是用来存放team_match_signups_id，group_number就是其分组编号，team_event_code就是team_match_signups表中的team_event_code；team_match_signups表，记录注册的参加团体赛的队伍，每个team_match_signup中有多个team参加比赛，这些被记录在teams表中的team_match_signups_id字段，用来表示该team是属于哪个team_match_signups，此外其team_event_code用来区分不同赛事；team_event_matches表用来记录团体赛事，其中master_match_schedule_id用来记录是哪两个team_match_signups进行比赛，match_schedule_id则是用来记录这两个team_match_signups中具体进行的哪些对局，master_match_schedule_id和match_schedule_id都记录在master_schedule表中；match_schedule表记录赛事具体时间场地和参赛队伍（teams）/运动员（participants），其中的match_id字段用来关联 match表；matches表中的winner_id字段用来记录获胜team的team_id。  
+具体要求：  
+1.1 首先按获胜场数定名次；  
+2.1 当对阵的两个队伍（team_match_signups）获胜场数相同，则两者间比赛的胜者名次列前；  
+3.1 三个或三个以上队伍（team_match_signups）获胜场数相同，则按在该组比赛的净胜局数定名次。  
+	3.1.1 计算净胜局数后，如还剩两个队伍（team_match_signups）净胜局数相同，则两者间比赛的胜者名次列前。  
+4.1 三个或三个以上队伍（team_match_signups）获胜场数相同，净胜局数亦相同，则按在该组比赛的净胜分数定名次。  
+	4.1.1 计算净胜分数后，如还剩两个队伍（team_match_signups）净胜分数相同，则两者间比赛的胜者名次列前。  
+	4.1.2 如还有三个或三个以上队伍（team_match_signups）净胜分数相同，则以抽签定名次
+```
+
 ****
 # 20260210
 - 执裁裁判的设置加一个查看所有的未设置裁判的比赛,在选择比赛的弹窗里面加一个选项，后端代码也修改一下。
@@ -863,3 +896,96 @@ CREATE TABLE `auth_role` (
 - 报名端
     - 现在报名过的队员应该还是可以在添加运动员的弹窗里面出现
     - 现在领队的那个填写不了，改一下
+****
+# 20260318
+- 查看分组加一个分界，就是不同项目的分开的明显一点。
+
+****
+# 20260326
+- 主页(match/detail):
+  - 只保留一个card，样式随意
+  - 展示当前比赛的基本数据
+    - 可以查看当前有什么比赛 
+    - 可以查看报名的数量,场地数量,已经完成的比赛数量
+    - 可以导出当前所有的比赛信息
+      - 这个先放个按钮在哪里，我看一下要导出什么信息
+- token存放的位置你也改一下放到localstorage里面，后面页面可能多开的。
+****
+# 20260331
+- 大屏幕展示数据
+  - 要做一下适配,就是多少行，列的展示
+  - 就写到http://localhost:81/main/match/referee-chief?id=257de693732eb1bdb4ab69aaada3a6e2这个页面里面加个按钮
+  - 然后出现的那个应该是放到另一个网页上面展示。
+  - 数据就通过sse来获取
+****
+# 20260502
+# remember keep the same TS、Css coding style
+##  05/02/2026
+### Finish page of MatchScore.vue 
+1. This page need could show small score and big score 
+2. Basic Info
+3. CRUD
+4. could search by venue,matchTime,matchId,matchCategory and division
+5. Paged conditional query
+
+**This SQL is only for reference and needs to be modified as required.**
+```sql
+SELECT
+    m.winner_id,
+    m.match_name,
+    m.match_category,
+    m.group_id,
+    m.match_id,
+    m.venue,
+    m.match_time_id,
+    t.team_id,
+    p1.participant_name AS participant_one_name,
+    p2.participant_name AS participant_two_name,
+    MAX(ms.big_score) AS big_score,
+    GROUP_CONCAT(ms.small_score ORDER BY ms.session_number ASC) AS small_scores
+FROM match_score ms
+JOIN teams t
+ON t.match_id = ms.match_id
+AND t.team_id = ms.team_id
+JOIN matches m
+ON m.match_id = ms.match_id
+LEFT JOIN participants p1 ON t.participant_one_id = p1.participant_id
+LEFT JOIN participants p2 ON t.participant_two_id = p2.participant_id
+WHERE ms.match_id = "d7d3da18-542f-4029-8866-bb4d7b955269"
+GROUP BY t.team_id, p1.participant_name, p2.participant_name
+```
+****
+# 20260503
+#  Finish LargeScreenDialog
+## 05/03/2026
+### Finish LargeScreenDialog
+1. Now LareScreenDialog Could not use,finish this Dialog
+
+# Problem MatchScore.vue
+##  Match List Page – Simple Task Notes
+## 1. Show winner
+* Add a "Winner" column
+## 2. Show venue and match time
+* Show venue directly
+* Show match time
+* Format time to normal readable format (like: 2026-05-01 14:30)
+* If empty, show `-`
+## 3. Show teams and score
+* Show both teams and score in one column
+Format example:
+```
+Team A vs Team B (21-15, 18-21, 21-19)
+```
+* If team missing → show `TBD`
+* If no score → show `-`
+* You can check refereeChief.vue for 详情 button
+## 4. Add filter (dropdown)
+- Need dropdown filters
+
+# Fix Problem PlayTeams.vue
+## 05/03/2026
+### Fix Conditional query
+1. Currently, conditional queries fail to return any data
+****
+## 部署
+sudo docker run --name bmsv6 --network bms-network -d -p 8089:8089 bms:v6
